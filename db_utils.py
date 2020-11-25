@@ -16,7 +16,7 @@ import pymysql
 # 连接数据库
 def connect_local_db():
     connect = pymysql.Connect(
-        host='127.0.0.1',
+        host='127.0.0.11',
         port=3306,
         user='ukdcg',
         passwd='ukthomas',
