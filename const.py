@@ -10,8 +10,8 @@
 25/11/2020 12:33   lzb       1.0         None
 """
 
-REMOTE_DATABASE = True  # 是否连接远程数据库
-IS_UNIX_OS = True  # 是否是服务器
+REMOTE_DATABASE = False  # 是否连接远程数据库
+IS_UNIX_OS = False  # 是否是服务器
 
 PROGRAM_DEBUG = False  # 是否DEBUG
 RECORD_LOGGING = False  # 是否记录logging
