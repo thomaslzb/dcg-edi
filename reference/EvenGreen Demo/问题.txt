@@ -1,0 +1,9 @@
+
+1.目的港的最晚时间，应该如何确定？
+LOC+7+GBFXT:181:6:Felixstowe+GB:162:5:United Kingdom'
+DTM+63:20210310:102' 
+
+2. 如何获取船名及船号？
+TDT+20+V.0003W+1+13:Ocean Vessel+EGLV:172:182+++:::CSCL JUPITER'
+
+3. 是否有修改或取消booking的Demo？

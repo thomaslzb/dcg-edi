@@ -1,0 +1,10 @@
+IFTMIN 指示报文
+
+IFTMBF 正式订舱报文
+IFTMBC 订舱确认报文
+
+IFTSTA 国际多式联运状态报告报文
+
+IFTMCS 指示合同状态报文
+
+IFTSAI 运输计划及实施信息报文
