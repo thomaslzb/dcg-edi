@@ -15,3 +15,9 @@ IS_UNIX_OS = False  # 是否是服务器
 
 PROGRAM_DEBUG = False  # 是否DEBUG
 RECORD_LOGGING = False  # 是否记录logging
+
+IP_DB_LOCAL = '127.0.0.1'
+IP_DATABASE = '47.115.73.25'
+
+FTP_UPLOAD_DIR = "sendfile-ftp"
+

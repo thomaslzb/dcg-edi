@@ -11,13 +11,16 @@
 """
 import pymssql
 import pymysql
+from const import *
 
 
 # 连接数据库
 def connect_local_db():
     connect = pymysql.Connect(
-        host='127.0.0.1',
+        host=IP_DB_LOCAL,
         port=3306,
+        user='ukdcg',
+        passwd='ukthomas',
         db='edi',
         charset='utf8'
     )
@@ -27,8 +30,10 @@ def connect_local_db():
 # 连接数据库
 def connect_remote_db():
     connect = pymssql.connect(
-        host='47.115.73.25',
+        host=IP_DATABASE,
         port=1433,
+        user='dcguk',
+        password='a1d2m3.',
         database='edi',
         charset='utf8'
     )

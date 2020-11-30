@@ -21,8 +21,11 @@ BOOKING_SQL = "SELECT booking.booking_id, " \
              "booking.scheduled_date, " \
              "booking.voyage_name," \
              "booking.voyage_no, " \
-             "booking.confirm_email, " \
-             "booking.booking_contact, " \
+             "booking.email, " \
+             "booking.contact, " \
+             "booking.telephone, " \
+             "booking.fax, " \
+             "booking.booking_date, " \
              "carrier.contract_no " \
              "FROM booking, carrier " \
              "WHERE booking.status = 0 " \
@@ -42,7 +45,7 @@ BOOKING_DETAIL_SQL = "SELECT booking_detail.product_description, " \
              "FROM booking_detail " \
              "WHERE booking_detail.booking_id = '%s' "
 
-UPDATE_CANCEL_SQL = "UPDATE booking " \
-                    "SET booking.status = '%d' "  \
+UPDATE_BOOKING_STATUS_SQL = "UPDATE booking " \
+                    "SET booking.status = '%d' " + ", error = '%s' "  \
                     "WHERE booking.booking_id = '%s' "
 
