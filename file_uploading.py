@@ -159,7 +159,7 @@ if __name__ == "__main__":
         bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)
         files_list = get_file_list(local_path, [])
         if files_list:
-            ftp = ftpconnect(HOST, PORT, USERNAME, PASSWORD)
+            ftp = ftpconnect(FTP_HOST, FTP_PORT, FTP_USERNAME, FTP_PASSWORD)
             ftp.cwd(REMOTE_DIRECTORY)
             for file in files_list:
                 (path, filename) = os.path.split(file)
