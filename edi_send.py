@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@File    :   edi.py    
+@File    :   edi_send.py
 @Contact :   thomaslzb@hotmail.com
 @License :   (C)Copyright 2020-2022, Zibin Li
 
@@ -23,34 +23,42 @@ def get_booking_data(current_row):
         'receipt_country': current_row[1].strip(),
         'receipt_port': current_row[2].strip(),
         'delivery_country': current_row[3].strip(),
-        'delivery_port': current_row[4].strip(),
-        'transport_service_type': str(current_row[5]).strip(),
-        'transport_service_mode': str(current_row[6]).strip(),
-        'scheduled_date': current_row[7].strftime('%Y%m%d'),
-        'voyage_name': current_row[8].strip(),
-        'voyage_no': current_row[9].strip(),
-        'email': current_row[10].strip(),
-        'contact': current_row[11].strip(),
-        'telephone': current_row[12].strip(),
-        'fax': current_row[13].strip(),
-        'booking_date': current_row[14],
-        'contract_no': current_row[15].strip(),
+        'delivery_country_name': current_row[4].strip(),
+        'delivery_port': current_row[5].strip(),
+        'delivery_port_name': current_row[6].strip(),
+        'transport_service_type': str(current_row[7]).strip(),
+        'transport_service_mode': str(current_row[8]).strip(),
+        'scheduled_date': current_row[9].strftime('%Y%m%d'),
+        'voyage_name': current_row[10].strip(),
+        'voyage_no': current_row[11].strip(),
+        'email': current_row[12].strip(),
+        'contact': current_row[13].strip(),
+        'telephone': current_row[14].strip(),
+        'fax': current_row[15].strip(),
+        'booking_date': current_row[16],
+        'contract_no': current_row[17].strip(),
+        'business_name': current_row[18].strip(),
+        'address1': current_row[19].strip(),
+        'address2': current_row[20].strip(),
+        'town': current_row[21].strip(),
+        'country': current_row[22],
+        'postcode': current_row[23].strip(),
     }
     return booking_data
 
 
 def get_booking_detail_data(current_row):
     booking_detail_data = {
-        'product_description': current_row[0],
-        'container_code': current_row[1],
+        'product_description': current_row[0].strip(),
+        'container_code': current_row[1].strip(),
         'container_qty': current_row[2],
         'weight': current_row[3],
         'weight_disc': current_row[4],
-        'weight_unit': current_row[5],
+        'weight_unit': current_row[5].strip(),
         'quantity': current_row[6],
         'volume': current_row[7],
-        'volume_unit': current_row[8],
-        'remark': current_row[9],
+        'volume_unit': current_row[8].strip(),
+        'remark': current_row[9].strip(),
     }
     return booking_detail_data
 
@@ -146,8 +154,12 @@ def main_progress(connect_db):
                 # 收集所有数据
                 booking_data = get_eid_data(booking_data, all_booking_detail_row)
 
-                # 正式开始写报文
-                handle_edi_file(booking_data)
+                # 编写报文的内容
+                content_list = encoding_edi_file(booking_data, connect_db)
+
+                # 保存文件
+                filename = booking_data["booking_id"] + ".txt"
+                save_to_file(filename, content_list)
 
                 # 更新数据库
                 status = 1
@@ -181,6 +193,6 @@ if __name__ == "__main__":
     while is_connect_db:
         print("Begin Searching database...")
         main_progress(db_connect)
-        print("Sleeping 60s......\n")
-        time.sleep(10)
+        print("EDI System Sleeping ...\n")
+        time.sleep(EDI_SLEEP_TIME)
     db_connect.close()

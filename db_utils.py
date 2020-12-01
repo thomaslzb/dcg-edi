@@ -19,9 +19,9 @@ def connect_local_db():
     connect = pymysql.Connect(
         host=IP_DB_LOCAL,
         port=3306,
-        user='ukdcg',
-        passwd='ukthomas',
-        db='edi',
+        user=LOCAL_DATABASE_USERNAME,
+        passwd=LOCAL_DATABASE_PWD,
+        db=LOCAL_DATABASE_NAME,
         charset='utf8'
     )
     return connect
@@ -32,9 +32,9 @@ def connect_remote_db():
     connect = pymssql.connect(
         host=IP_DATABASE,
         port=1433,
-        user='dcguk',
-        password='a1d2m3.',
-        database='edi',
+        user=REMOTE_DATABASE_USERNAME,
+        password=REMOTE_DATABASE_PWD,
+        database=REMOTE_DATABASE_NAME,
         charset='utf8'
     )
     return connect

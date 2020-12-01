@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@File    :   ftp_file.py    
+@File    :   file_uploading.py
 @Contact :   thomaslzb@hotmail.com
 @License :   (C)Copyright 2020-2022, Zibin Li
 
@@ -40,24 +40,14 @@ https://www.cnblogs.com/xiao-apple36/p/9675185.html
 """
 
 # FTP操作
-from distutils import file_util
 import ftplib
 import os
-import time
 import socket
+import time
+import shutil
+
+from const import *
 from concurrent.futures import ThreadPoolExecutor
-
-FTP_SERVICE = {
-    'HOST': '47.115.73.25',
-    'USERNAME': "ftpdcg",
-    'PASSWORD': "dcg123.",
-}
-
-host = '47.115.73.25'
-username = 'ftpdcg'
-password = 'dcg123.'
-file = 'readme.txt'
-port = 21
 
 
 def ftpconnect(host, port, username, password):
@@ -67,6 +57,7 @@ def ftpconnect(host, port, username, password):
     try:
         ftp.connect(host, port)  # 连接
         ftp.login(username, password)  # 登录，如果匿名登录则用空串代替即可
+        ftp.af = socket.AF_INET6  # IMPORTMENT: force ftplib to use EPSV by setting
         print(ftp.getwelcome())  # 打印欢迎信息
     except(socket.error, socket.gaierror):  # ftp 连接错误
         print("ERROR: cannot connect [{}:{}]".format(host, port))
@@ -108,21 +99,27 @@ def downloadfile(ftp, remotepath, localpath):
     fp.close()  # 关闭文件
 
 
-def uploadfile(ftp, remotepath, localpath):
+def uploadfile(ftp, remotepath, upload_file):
     """
     上传文件
     :param ftp:
     :param remotepath:
-    :param localpath:
-    :return:
+    :param upload_file:
+    :return: True
     """
-    bufsize = 1024
-    fp = open(localpath, 'rb')
-    res = ftp.storbinary('STOR ' + remotepath, fp, bufsize)  # 上传文件
-    if res.find('226') != -1:
-        print('upload file complete', remotepath)
-    ftp.set_debuglevel(0)
-    fp.close()
+    is_send = False
+    try:
+        with open(upload_file, 'rb') as fp:
+            res = ftp.storlines("STOR " + remotepath, fp)
+            if res.startswith('226 Transfer complete'):
+                print(upload_file+'.... Upload success.')
+                is_send = True
+            else:
+                print('Upload failed')
+    except ftplib.all_errors as e:
+        print('FTP error:', e)
+
+    return is_send
 
 
 def ftp_theadpool(func, ftp, file_list):
@@ -138,97 +135,46 @@ def ftp_theadpool(func, ftp, file_list):
     pool.shutdown()
 
 
+def get_file_list(directory, files_list):
+    """
+    扫描文件夹directory中所有文件，返回文件的相对路径列表
+    :param directory:
+    :param files_list:
+    :return:
+    """
+    newDir = directory
+    if os.path.isfile(directory):         # 如果是文件则添加进 fileList
+        files_list.append(directory)
+    elif os.path.isdir(directory):
+        for s in os.listdir(directory):   # 如果是文件夹
+            newDir = os.path.join(directory, s)
+            get_file_list(newDir, files_list)
+    return files_list
+
+
 if __name__ == "__main__":
+    while True:
+        files_list = []
+        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)
+        bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)
+        files_list = get_file_list(local_path, [])
+        if files_list:
+            ftp = ftpconnect(HOST, PORT, USERNAME, PASSWORD)
+            ftp.cwd(REMOTE_DIRECTORY)
+            for file in files_list:
+                (path, filename) = os.path.split(file)
+                remote_file = filename
+                # 上传文件
+                if uploadfile(ftp, remote_file, file):
+                    # remove to bak
+                    try:
+                        shutil.move(file, bak_path)
+                        print(file+"..... Move file success....")
+                    except:
+                        print("Move file failure....")
+                    pass
+            ftp.close()
+        else:
+            time.sleep(UPLOADING_SLEEP_TIME)
+            print("FTP Servicing is sleeping ...")
 
-    import ftplib
-
-    ftp = ftplib.FTP()
-    ftp.set_debuglevel(2)
-    ftp.encoding = 'utf-8'
-    try:
-        ftp.connect(host, port)
-        ftp.login(username, password)
-        ftp.af = socket.AF_INET6  # IMPORTMENT: force ftplib to use EPSV by setting
-        print(ftp.getwelcome())
-    except(socket.error, socket.gaierror):  # ftp error
-        print("ERROR: cannot connect [{}:{}]".format(host, port))
-    except ftplib.error_perm:  # user Authentication failed
-        print("ERROR: user Authentication failed ")
-
-    filename = 'readme.txt'
-
-    files = []
-    ftp.dir()
-    print(files)
-    file_list = ftp.nlst()  # 获取目录下的文件
-    print(file_list)
-
-    # Method 1
-    try:
-        with open("readme.txt", 'rb') as fp:
-            res = ftp.storlines("STOR " + filename, fp)
-            if not res.startswith('226 Transfer complete'):
-                print('Upload failed')
-
-    except ftplib.all_errors as e:
-        print('FTP error:', e)
-
-    # Method 2
-    try:
-        bufsize = 1024
-        fp = open("readme.txt", 'rb')
-        res = ftp.storbinary('STOR ' + "readme", fp, bufsize)  # 上传文件
-        if res.find('226') != -1:
-            print('upload file complete', "readme")
-    except ftplib.all_errors as e:
-        print('FTP error:', e)
-
-    # ftp.close()
-
-    # ftp_msg = ftp.pwd()
-    # print(ftp_msg)
-    #
-    # ftp.cwd('dcg')
-    # ftp_msg = ftp.pwd()
-    # print(ftp_msg)
-    # files = []
-
-
-    start = time.time()
-
-
-    # uploadfile(ftp, ftp_msg, "readme.txt",)  # 上传文件
-    # ftp.delete("api-error.log")  # testing ok
-    ftp.quit()
-
-#
-# def up_to_ftp(edi_file):
-#     file_path = Path(edi_file)
-#
-#     with FTP(FTP_SERVICE['HOST'], FTP_SERVICE['USERNAME'], FTP_SERVICE['PASSWORD']) as ftp, open(file_path, 'rb') as file:
-#         ftp.storbinary(f'STOR {file_path.name}', file)
-#
-#
-# ftp = FTP()
-# host = "47.115.73.25"
-# port = 21
-# ftp.connect(host, port)
-# print(ftp.getwelcome())
-# try:
-#     print("Logging in...")
-#     myFTP = FTP(host, "ftpdcg", "dcg123.")
-#     ftp.set_debuglevel(2)
-#     with myFTP, open('C://DCG//GitHub//dcg-edi//sendfile-upftp', 'rb') as file:
-#         ftp.storbinary(f'STOR {"C://DCG//GitHub//dcg-edi//sendfile-upftp//abc.txt"}', file)
-#
-# except:
-#     "failed to login"
-#
-# # filename = "FTP-abc.txt"
-# # ftp = FTP('47.115.73.25')
-# # ftp.login('ftpdcg', 'dcg123.')
-# # # ftp.cwd('Articles')
-# # uploadfile = open('C://DCG//GitHub//dcg-edi//sendfile-upftp//abc.txt', 'rb')
-# #
-# # ftp.storlines('STOR ' + filename, uploadfile)
-# #

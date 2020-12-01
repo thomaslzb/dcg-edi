@@ -15,7 +15,9 @@ BOOKING_SQL = "SELECT booking.booking_id, " \
              "booking.receipt_country, " \
              "booking.receipt_port, " \
              "booking.delivery_country, " \
+             "country.country, " \
              "booking.delivery_port," \
+             "country_port.name," \
              "booking.transport_service_type, " \
              "booking.transport_service_mode, " \
              "booking.scheduled_date, " \
@@ -26,10 +28,20 @@ BOOKING_SQL = "SELECT booking.booking_id, " \
              "booking.telephone, " \
              "booking.fax, " \
              "booking.booking_date, " \
-             "carrier.contract_no " \
-             "FROM booking, carrier " \
+             "carrier.contract_no, " \
+             "shipper.business_name, " \
+             "shipper.address1, " \
+             "shipper.address2, " \
+             "shipper.town, " \
+             "shipper.country, " \
+             "shipper.postcode " \
+             "FROM booking, carrier, country_port, country, shipper " \
              "WHERE booking.status = 0 " \
              "AND booking.carrier_id = carrier.id " \
+             "AND booking.delivery_country = country_port.country_code " \
+             "AND booking.delivery_port = country_port.port_code " \
+             "AND booking.delivery_country = country.code " \
+             "AND booking.shipper_code = shipper.code " \
              "LIMIT 1"
 
 BOOKING_DETAIL_SQL = "SELECT booking_detail.product_description, " \
@@ -48,4 +60,10 @@ BOOKING_DETAIL_SQL = "SELECT booking_detail.product_description, " \
 UPDATE_BOOKING_STATUS_SQL = "UPDATE booking " \
                     "SET booking.status = '%d' " + ", error = '%s' "  \
                     "WHERE booking.booking_id = '%s' "
+
+SELECT_COUNTRY_SQL = "SELECT country FROM country WHERE country.code = '%s'"
+
+SELECT_COUNTRY_PORT_SQL = "SELECT name FROM country_port  " \
+                          "WHERE country_port.country_code = '%s' " \
+                          "AND  country_port.port_code = '%s' "
 
