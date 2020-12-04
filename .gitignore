@@ -14,3 +14,4 @@ sendfile-ftp/
 venv/Include/
 venv/Lib/site-packages/pyodbc-4.0.30.dist-info/
 venv/Lib/site-packages/pyodbc.cp38-win_amd64.pyd
+const.py
