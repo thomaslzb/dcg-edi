@@ -1,6 +1,10 @@
 # 和台湾长荣集团的EDI接口相关开发
+
 # create virtural myvenv
+pip freeze > requirements.txt
+
 virtualenv myvenv
+
 # Activate
 source myvenv/bin/activate
 # deactivate
@@ -24,11 +28,18 @@ cd /var/parcels-api
 source api-venv/bin/activate
 
 2. 将启动后台程序
-2.1 建立运单，void运单
-nohup python -u all_parcels.py >/dev/null 2>&1 &
+2.1 从数据库里读取数据，上传给长荣
+nohup python -u edi_send.py >/dev/null 2>&1 &
 
-2.2 tracking运单
-nohup python -u tracking_parcels.py >/dev/null 2>&1 &
+2.2 从将本地文件上传到FTP
+nohup python -u ftp_uploading.py >/dev/null 2>&1 &
+
+
+2.3 从FTP上下载文件到本地
+nohup python -u ftp_download.py >/dev/null 2>&1 &
+
+2.4 读本地文件写入到数据库中
+nohup python -u edi_confirm.py >/dev/null 2>&1 &
 
 
 

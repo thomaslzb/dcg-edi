@@ -11,7 +11,7 @@
 """
 
 
-BOOKING_SQL = "SELECT booking.booking_id, " \
+BOOKING_SQL = "SELECT  TOP 1 booking.booking_id, " \
              "booking.receipt_country, " \
              "booking.receipt_port, " \
              "booking.delivery_country, " \
@@ -41,8 +41,7 @@ BOOKING_SQL = "SELECT booking.booking_id, " \
              "AND booking.delivery_country = country_port.country_code " \
              "AND booking.delivery_port = country_port.port_code " \
              "AND booking.delivery_country = country.code " \
-             "AND booking.shipper_code = shipper.code " \
-             "LIMIT 1"
+             "AND booking.shipper_code = shipper.code "
 
 BOOKING_DETAIL_SQL = "SELECT booking_detail.product_description, " \
              "booking_detail.container_code, " \
@@ -55,15 +54,15 @@ BOOKING_DETAIL_SQL = "SELECT booking_detail.product_description, " \
              "booking_detail.volume_unit, " \
              "booking_detail.remark " \
              "FROM booking_detail " \
-             "WHERE booking_detail.booking_id = '%s' "
+             "WHERE booking_detail.booking_id = ? "
 
 UPDATE_BOOKING_STATUS_SQL = "UPDATE booking " \
-                    "SET booking.status = '%d' " + ", error = '%s' "  \
-                    "WHERE booking.booking_id = '%s' "
+                    "SET booking.status = ?, error = ? "  \
+                    "WHERE booking.booking_id = ? "
 
-SELECT_COUNTRY_SQL = "SELECT country FROM country WHERE country.code = '%s'"
+SELECT_COUNTRY_SQL = "SELECT country FROM country WHERE country.code = ?"
 
 SELECT_COUNTRY_PORT_SQL = "SELECT name FROM country_port  " \
-                          "WHERE country_port.country_code = '%s' " \
-                          "AND  country_port.port_code = '%s' "
+                          "WHERE country_port.country_code = ? " \
+                          "AND  country_port.port_code = ? "
 

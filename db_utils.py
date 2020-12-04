@@ -9,8 +9,8 @@
 ------------      -------    --------    -----------
 14/10/2020 12:56   lzb       1.0         None
 """
-import pymssql
 import pymysql
+import pyodbc
 from const import *
 
 
@@ -29,14 +29,13 @@ def connect_local_db():
 
 # 连接数据库
 def connect_remote_db():
-    connect = pymssql.connect(
-        host=IP_DATABASE,
-        port=1433,
-        user=REMOTE_DATABASE_USERNAME,
-        password=REMOTE_DATABASE_PWD,
-        database=REMOTE_DATABASE_NAME,
-        charset='utf8'
-    )
+    connect = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + IP_DATABASE
+                             + ';DATABASE=' + REMOTE_DATABASE_NAME
+                             + ';UID=' + REMOTE_DATABASE_USERNAME
+                             + ';PWD=' + REMOTE_DATABASE_PWD
+                             + '; CHARSET=UTF8'
+                             + ';sslca={BaltimoreCyberTrustRoot.crt.pem}; sslverify=0; Option=3;'
+                             )
     return connect
 
 
@@ -53,12 +52,13 @@ def select_sql(db_connects, sql):
 
 def select_sql_data(db_connects, sql, data):
     """
+    :param data: param
     :param db_connects: database
-    :param sql:
+    :param sql: sql
     :return: cursor
     """
     cursor = db_connects.cursor()
-    cursor.execute(sql % data)  # 取到所有未处理的数据， 一次最多处理60条
+    cursor.execute(sql, data)  # 取到所有未处理的数据
     return cursor
 
 
@@ -70,8 +70,11 @@ def update_sql(db_connects, sql, data):
     :return: cursor
     """
     cursor = db_connects.cursor()
-    cursor.execute(sql % data)
-    db_connects.commit()
+    try:
+        cursor.execute(sql, data)
+        db_connects.commit()
+    except:
+        db_connects.rollback()
     cursor.close()
 
 
@@ -83,6 +86,9 @@ def insert_sql(db_connects, sql, data):
     :return: cursor
     """
     cursor = db_connects.cursor()
-    cursor.execute(sql % data)
-    db_connects.commit()
+    try:
+        cursor.execute(sql, data)
+        db_connects.commit()
+    except:
+        db_connects.rollback()
     cursor.close()

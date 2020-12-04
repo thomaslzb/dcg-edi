@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@File    :   file_uploading.py
+@File    :   ftp_tools.py
 @Contact :   thomaslzb@hotmail.com
 @License :   (C)Copyright 2020-2022, Zibin Li
 
@@ -50,22 +50,30 @@ from const import *
 from concurrent.futures import ThreadPoolExecutor
 
 
-def ftpconnect(host, port, username, password):
-    ftp = ftplib.FTP()
+def create_ftp_connect(host, port, username, password):
+    """
+    建立FTP连接
+    :param host:
+    :param port:
+    :param username:
+    :param password:
+    :return: FTP 连接
+    """
+    ftp_connect = ftplib.FTP()
     # ftp.set_debuglevel(2)         #打开调试级别2，显示详细信息
-    ftp.encoding = 'utf-8'  # 解决中文编码问题，默认是latin-1
+    ftp_connect.encoding = 'utf-8'  # 解决中文编码问题，默认是latin-1
     try:
-        ftp.connect(host, port)  # 连接
-        ftp.login(username, password)  # 登录，如果匿名登录则用空串代替即可
-        ftp.af = socket.AF_INET6  # IMPORTMENT: force ftplib to use EPSV by setting
-        print(ftp.getwelcome())  # 打印欢迎信息
+        ftp_connect.connect(host, port)  # 连接
+        ftp_connect.login(username, password)  # 登录，如果匿名登录则用空串代替即可
+        ftp_connect.af = socket.AF_INET6  # IMPORTMENT: force ftplib to use EPSV by setting
+        print(ftp_connect.getwelcome())  # 打印欢迎信息
     except(socket.error, socket.gaierror):  # ftp 连接错误
         print("ERROR: cannot connect [{}:{}]".format(host, port))
         return None
     except ftplib.error_perm:  # 用户登录认证错误
         print("ERROR: user Authentication failed ")
         return None
-    return ftp
+    return ftp_connect
 
 
 def is_ftp_file(ftp_conn, ftp_path):
@@ -78,39 +86,39 @@ def is_ftp_file(ftp_conn, ftp_path):
         return False
 
 
-def downloadfile(ftp, remotepath, localpath):
+def downloadfile(ftp_connect, remote_name, local_name):
     """
      下载文件
-    :param ftp:
-    :param remotepath:
-    :param localpath:
+    :param ftp_connect:
+    :param remote_name:
+    :param local_name:
     :return:
     """
     bufsize = 1024  # 设置缓冲块大小
-    fp = open(localpath, 'wb')  # 以写模式在本地打开文件
+    fp = open(local_name, 'wb')  # 以写模式在本地打开文件
 
     res = ftp.retrbinary(
-        'RETR ' + remotepath,
+        'RETR ' + remote_name,
         fp.write,
         bufsize)  # 接收服务器上文件并写入本地文件
     if res.find('226') != -1:
-        print('download file complete', localpath)
-    ftp.set_debuglevel(0)  # 关闭调试
+        print('download file complete', local_name)
+    ftp_connect.set_debuglevel(0)  # 关闭调试
     fp.close()  # 关闭文件
 
 
-def uploadfile(ftp, remotepath, upload_file):
+def uploading_file(ftp_connect, remote_name, upload_file):
     """
     上传文件
-    :param ftp:
-    :param remotepath:
-    :param upload_file:
+    :param ftp_connect: FTP connect name
+    :param remote_name: remote file name
+    :param upload_file: the file you need to upload
     :return: True
     """
     is_send = False
     try:
         with open(upload_file, 'rb') as fp:
-            res = ftp.storlines("STOR " + remotepath, fp)
+            res = ftp_connect.storlines("STOR " + remote_name, fp)
             if res.startswith('226 Transfer complete'):
                 print(upload_file+'.... Upload success.')
                 is_send = True
@@ -122,59 +130,19 @@ def uploadfile(ftp, remotepath, upload_file):
     return is_send
 
 
-def ftp_theadpool(func, ftp, file_list):
+def get_file_list(directory, file_list):
     """
-    通过线程池调用上传文件列表
-    :param func:
-    :param file_list:
-    :return:
-    """
-    pool = ThreadPoolExecutor(6)
-    for remotepath, localpath in file_list:
-        pool.submit(func, ftp, remotepath, localpath)
-    pool.shutdown()
-
-
-def get_file_list(directory, files_list):
-    """
-    扫描文件夹directory中所有文件，返回文件的相对路径列表
+    使用递归算法，扫描文件夹directory中所有文件，返回文件的相对路径列表
     :param directory:
-    :param files_list:
+    :param file_list:
     :return:
     """
     newDir = directory
     if os.path.isfile(directory):         # 如果是文件则添加进 fileList
-        files_list.append(directory)
+        file_list.append(directory)
     elif os.path.isdir(directory):
         for s in os.listdir(directory):   # 如果是文件夹
             newDir = os.path.join(directory, s)
-            get_file_list(newDir, files_list)
-    return files_list
-
-
-if __name__ == "__main__":
-    while True:
-        files_list = []
-        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)
-        bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)
-        files_list = get_file_list(local_path, [])
-        if files_list:
-            ftp = ftpconnect(FTP_HOST, FTP_PORT, FTP_USERNAME, FTP_PASSWORD)
-            ftp.cwd(REMOTE_DIRECTORY)
-            for file in files_list:
-                (path, filename) = os.path.split(file)
-                remote_file = filename
-                # 上传文件
-                if uploadfile(ftp, remote_file, file):
-                    # remove to bak
-                    try:
-                        shutil.move(file, bak_path)
-                        print(file+"..... Move file success....")
-                    except:
-                        print("Move file failure....")
-                    pass
-            ftp.close()
-        else:
-            time.sleep(UPLOADING_SLEEP_TIME)
-            print("FTP Servicing is sleeping ...")
+            get_file_list(newDir, file_list)
+    return file_list
 

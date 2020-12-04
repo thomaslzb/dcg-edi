@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@File    :   files.py    
+台湾长荣EDI的报文编写
+@File    :   evengreen_files.py
 @Contact :   thomaslzb@hotmail.com
 @License :   (C)Copyright 2020-2022, Zibin Li
 写EDI的文件
@@ -23,11 +24,11 @@ def get_country_name(connect_db, country_code):
     :return: name 国家名称
     """
     name = ""
-    data = (country_code,)
+    data = [country_code,]
     booking_cursor = select_sql_data(connect_db, SELECT_COUNTRY_SQL, data)  # 取到数据
     get_row = booking_cursor.fetchone()
     if get_row:
-        name = get_row[0]
+        name = get_row[0].strip()
     return name
 
 
@@ -40,11 +41,11 @@ def get_country_port_name(connect_db, country_code, port_code):
     :return: port_name
     """
     port_name = ""
-    data = (country_code, port_code)
+    data = [country_code, port_code]
     booking_cursor = select_sql_data(connect_db, SELECT_COUNTRY_PORT_SQL, data)  # 取到数据
     get_row = booking_cursor.fetchone()
     if get_row:
-        port_name = get_row[0]
+        port_name = get_row[0].strip()
     return port_name
 
 

@@ -3,7 +3,14 @@
 *.iml
 *.pyc
 db_utils.py
-db_utils.py
 const.py
 const.py
 const.py
+!/const.py
+getfile-bak/
+getfile-ftp/
+requirement.txt
+sendfile-ftp/
+venv/Include/
+venv/Lib/site-packages/pyodbc-4.0.30.dist-info/
+venv/Lib/site-packages/pyodbc.cp38-win_amd64.pyd
