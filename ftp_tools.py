@@ -86,7 +86,7 @@ def is_ftp_file(ftp_conn, ftp_path):
         return False
 
 
-def downloadfile(ftp_connect, remote_name, local_name):
+def download_file(ftp_connect, remote_name, local_name):
     """
      下载文件
     :param ftp_connect:
@@ -94,17 +94,20 @@ def downloadfile(ftp_connect, remote_name, local_name):
     :param local_name:
     :return:
     """
+    is_download = False
     bufsize = 1024  # 设置缓冲块大小
     fp = open(local_name, 'wb')  # 以写模式在本地打开文件
 
-    res = ftp.retrbinary(
+    res = ftp_connect.retrbinary(
         'RETR ' + remote_name,
         fp.write,
         bufsize)  # 接收服务器上文件并写入本地文件
     if res.find('226') != -1:
-        print('download file complete', local_name)
+        is_download = True
+        # print('download file complete', local_name)
     ftp_connect.set_debuglevel(0)  # 关闭调试
     fp.close()  # 关闭文件
+    return is_download
 
 
 def uploading_file(ftp_connect, remote_name, upload_file):
@@ -145,4 +148,5 @@ def get_file_list(directory, file_list):
             newDir = os.path.join(directory, s)
             get_file_list(newDir, file_list)
     return file_list
+
 

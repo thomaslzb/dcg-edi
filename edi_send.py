@@ -15,7 +15,7 @@ from datetime import datetime
 import time
 from db_utils import *
 from ftp_tools import create_ftp_connect, uploading_file, get_file_list
-from sql_const import *
+from sql_const import BOOKING_SQL
 from const import *
 from evengreen_files import *
 
@@ -141,7 +141,8 @@ def main_progress(connect_db):
     保存报文
     上传报文
     """
-    booking_cursor = select_sql(connect_db, BOOKING_SQL)  # 取到所有未处理的数据
+    status = [0, ]
+    booking_cursor = select_sql_data(connect_db, BOOKING_SQL, status)  # 取到所有未处理的数据
     get_row = booking_cursor.fetchone()
     if get_row:
         # 取到所有未处理的订舱主数据
@@ -197,65 +198,65 @@ def main_progress(connect_db):
 
         # 连接FTP服务器
         start_time = time.time()
-        filename = booking_data["booking_id"] + ".txt"  #
-        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)  # 本地文件的目录
-        bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)  # 本地需要备份的目录
-        remote_file = filename  # 定义远程的文件名
         ftp = create_ftp_connect(FTP_HOST, FTP_PORT, FTP_USERNAME, FTP_PASSWORD)
-        ftp.cwd(REMOTE_DIRECTORY)  # 转换至需要上传的目录
-        if PROGRAM_DEBUG:
-            spend_time = time.time() - start_time
-            print(" ** Step5: 连接远程的FTP服务器 " + "{:3.6f}".format(spend_time) + "s. ")
+        if ftp:
+            ftp.cwd(REMOTE_DIRECTORY)  # 转换至需要上传的目录
+            if PROGRAM_DEBUG:
+                spend_time = time.time() - start_time
+                print(" ** Step5: 连接远程的FTP服务器 " + "{:3.6f}".format(spend_time) + "s. ")
 
-        # 上传文件(上传整个目录的文件)
-        start_time = time.time()
-        files_list = []
-        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)
-        bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)
-        files_list = get_file_list(local_path, files_list)
-        if files_list:
-            for file in files_list:
-                (path, filename) = os.path.split(file)
-                remote_file = filename
-                if uploading_file(ftp, remote_file, filename):
-                    if PROGRAM_DEBUG:
-                        spend_time = time.time() - start_time
-                        print(" ** Step6: 成功上传文件 " + filename + "...." + "{:3.6f}".format(spend_time) + "s. ")
-                    # remove to bak
-                    try:
-                        # 上传成功后，将本地文件到备份目录中
-                        start_time = time.time()
-                        shutil.copy(file, bak_path)
-                        os.remove(file)
+            # 上传文件(上传整个目录的文件)
+            start_time = time.time()
+            files_list = []
+            local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)
+            bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)
+            files_list = get_file_list(local_path, files_list)
+            if files_list:
+                for file in files_list:
+                    (path, filename) = os.path.split(file)
+                    remote_file = filename
+                    if uploading_file(ftp, remote_file, filename):
                         if PROGRAM_DEBUG:
                             spend_time = time.time() - start_time
-                            print(" ** Step7: 将文件 " + filename + "移至到备份目录中...." + "{:3.6f}".format(spend_time) + "s. ")
-                    except:
-                        if PROGRAM_DEBUG:
-                            spend_time = time.time() - start_time
-                            print(filename + " ** Step7: 将文件移至到备份目录失败...." + "{:3.6f}".format(spend_time) + "s. ")
+                            print(" ** Step6: 成功上传文件 " + filename + "...." + "{:3.6f}".format(spend_time) + "s. ")
+                        # remove to bak
+                        try:
+                            # 上传成功后，将本地文件到备份目录中
+                            start_time = time.time()
+                            shutil.copy(file, bak_path)
+                            os.remove(file)
+                            if PROGRAM_DEBUG:
+                                spend_time = time.time() - start_time
+                                print(" ** Step7: 将文件 " + filename + "移至到备份目录中...." + "{:3.6f}".format(spend_time) + "s. ")
+                        except:
+                            if PROGRAM_DEBUG:
+                                spend_time = time.time() - start_time
+                                print(filename + " ** Step7: 将文件移至到备份目录失败...." + "{:3.6f}".format(spend_time) + "s. ")
+            # 关闭FTP连接
+            ftp.close()
+        else:
+            if PROGRAM_DEBUG:
+                spend_time = time.time() - start_time
+                print(" ** Step5: 连接远程的FTP服务器...失败 " + "{:3.6f}".format(spend_time) + "s. ")
 
-        # 关闭FTP连接
-        ftp.close()
 
     booking_cursor.close()
 
     return
 
 
+# main progress
 if __name__ == "__main__":
     is_connect_db = True
     if REMOTE_DATABASE:  # 连接远程数据库
         db_connect = connect_remote_db()
         print("Connect REMOTE database success!")
-    else:
-        db_connect = connect_local_db()
-        print("Connect LOCAL database success!")
-    # end if
 
-    while is_connect_db:
-        print("Begin Searching database...")
-        main_progress(db_connect)
-        print("EDI System Sleeping ...\n")
-        time.sleep(EDI_SLEEP_TIME)
-    db_connect.close()
+        while is_connect_db:
+            print("Begin Searching database...")
+            main_progress(db_connect)
+            print("EDI SEND System Sleeping ...\n")
+            time.sleep(EDI_SEND_SLEEP_TIME)
+        db_connect.close()
+    else:
+        print("Connect REMOTE database Failure!")

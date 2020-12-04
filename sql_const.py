@@ -36,7 +36,7 @@ BOOKING_SQL = "SELECT  TOP 1 booking.booking_id, " \
              "shipper.country, " \
              "shipper.postcode " \
              "FROM booking, carrier, country_port, country, shipper " \
-             "WHERE booking.status = 0 " \
+             "WHERE booking.status = ? " \
              "AND booking.carrier_id = carrier.id " \
              "AND booking.delivery_country = country_port.country_code " \
              "AND booking.delivery_port = country_port.port_code " \
@@ -66,3 +66,13 @@ SELECT_COUNTRY_PORT_SQL = "SELECT name FROM country_port  " \
                           "WHERE country_port.country_code = ? " \
                           "AND  country_port.port_code = ? "
 
+SELECT_BOOKING_SQL = "SELECT  TOP 1 booking.status " \
+                     "FROM booking " \
+                     "WHERE booking.booking_id = ? " \
+
+INSERT_BOOKING_RESULT = "INSERT INTO booking_result  " \
+                            "(booking_id, carrier_booking_number,confirm_datetime, " \
+                            "voyage_name, voyage_no, receipt_country, receipt_port, " \
+                            "start_date, delivery_country, delivery_port, delivery_date, " \
+                            "exchange_ref, create_datetime)" \
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
