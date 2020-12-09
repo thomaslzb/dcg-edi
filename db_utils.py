@@ -92,3 +92,21 @@ def insert_sql(db_connects, sql, data):
     except:
         db_connects.rollback()
     cursor.close()
+
+
+def insert_sql_many(db_connects, sql, data):
+    """
+    :param db_connects: database
+    :param data: value
+    :param sql: update sql
+    :return: cursor
+    """
+    cursor = db_connects.cursor()
+    try:
+        cursor.fast_executemany = True
+        cursor.executemany(sql, data)
+        db_connects.commit()
+    except:
+        db_connects.rollback()
+    cursor.close()
+

@@ -14,9 +14,9 @@ import shutil
 from datetime import datetime
 import time
 from db_utils import *
-from ftp_tools import create_ftp_connect, uploading_file, get_file_list
 from sql_const import BOOKING_SQL
 from const import *
+from ftp_tools import create_ftp_connect, uploading_file, get_file_list
 from evengreen_files import *
 
 
@@ -95,20 +95,96 @@ def check_data(booking_data, all_detail_row):
             error_msg = "weight can't not less than zero"
             return error_msg
 
-        if detail_data['volume'] <= 0:  # 体积必须大于零
-            error_msg = "volume can't not less than zero"
-            return error_msg
-
-        if detail_data['quantity'] <= 0:  # 数量必须大于零
-            error_msg = "quantity can't not less than zero"
-            return error_msg
-
-        # 如果是每件货品的重量，这个数量必须大于零， 最后是传入重重量
-        if detail_data['weight_disc'] == 0 and detail_data['quantity'] <= 0:
-            error_msg = "weight_disc and quantity error"
-            return error_msg
-
     return error_msg
+
+
+def ftp_file(ftp_files_list):
+    start_time = time.time()
+    ftp = create_ftp_connect(FTP_HOST, FTP_PORT, FTP_USERNAME, FTP_PASSWORD)
+    if ftp:
+        ftp.cwd(REMOTE_DIRECTORY)  # 转换至需要上传的目录
+        if PROGRAM_DEBUG:
+            spend_time = time.time() - start_time
+            print(" ** Step5: 连接远程的FTP服务器 " + "{:3.6f}".format(spend_time) + "s. ")
+
+        # 上传文件(上传整个目录的文件)
+        start_time = time.time()
+        for file in ftp_files_list:
+            (path, filename) = os.path.split(file)
+            remote_file = filename
+            if uploading_file(ftp, remote_file, file):
+                if PROGRAM_DEBUG:
+                    spend_time = time.time() - start_time
+                    print(" ** Step6: 成功上传文件 " + filename + "...." + "{:3.6f}".format(spend_time) + "s. ")
+                # remove to bak
+                try:
+                    # 上传成功后，将本地文件到备份目录中
+                    start_time = time.time()
+                    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)
+                    shutil.copy(file, bak_path)
+                    os.remove(file)
+                    if PROGRAM_DEBUG:
+                        spend_time = time.time() - start_time
+                        print(" ** Step7: 将文件 " + filename + "移至到备份目录中...." + "{:3.6f}".format(spend_time) + "s. ")
+                except:
+                    if PROGRAM_DEBUG:
+                        spend_time = time.time() - start_time
+                        print(filename + " ** Step7: 将文件移至到备份目录失败...." + "{:3.6f}".format(spend_time) + "s. ")
+        # 关闭FTP连接
+        ftp.close()
+    else:
+        if PROGRAM_DEBUG:
+            spend_time = time.time() - start_time
+            print(" ** Step5: 连接远程的FTP服务器...失败 " + "{:3.6f}".format(spend_time) + "s. ")
+
+
+def make_edi_file(connect_db, booking_data, all_booking_detail_row):
+    """
+    制作EDI报文，并且更新数据库
+    :param connect_db: 数据库连接
+    :param booking_data: booking的数据
+    :param all_booking_detail_row: booking_detail 的数据
+    :return:
+    """
+    check_result = check_data(booking_data, all_booking_detail_row)
+    if len(check_result) <= 0:
+        start_time = time.time()
+        # 收集所有数据
+        booking_data = get_eid_data(booking_data, all_booking_detail_row)
+        if PROGRAM_DEBUG:
+            spend_time = time.time() - start_time
+            print(" ** Step1: 收集所有数据 " + "{:3.3f}".format(spend_time) + "s. ")
+
+        # 编写报文的内容
+        start_time = time.time()
+        content_list = encoding_edi_file(booking_data, connect_db)
+        if PROGRAM_DEBUG:
+            spend_time = time.time() - start_time
+            print(" ** Step2: 编写报文的内容 " + "{:3.6f}".format(spend_time) + "s. ")
+
+        # 保存文件
+        start_time = time.time()
+        filename = booking_data["booking_id"] + ".txt"
+        save_to_file(filename, content_list)
+        if PROGRAM_DEBUG:
+            spend_time = time.time() - start_time
+            print(" ** Step3: 生成新的报文文件 " + "{:3.6f}".format(spend_time) + "s. ")
+
+        # 更新数据库
+        status = 1
+    else:
+        # 更新数据库
+        status = 2
+    str_error = check_result
+
+    start_time = time.time()
+    data = [status, str_error, booking_data["booking_id"]]
+    update_sql(connect_db, UPDATE_BOOKING_STATUS_SQL, data)
+    if PROGRAM_DEBUG:
+        spend_time = time.time() - start_time
+        print(" ** Step4: 更新数据 " + "{:3.6f}".format(spend_time) + "s. ")
+
+    return
 
 
 def get_eid_data(booking_data, all_booking_detail_row):
@@ -152,93 +228,10 @@ def main_progress(connect_db):
         booking_detail_cursor = select_sql_data(connect_db, BOOKING_DETAIL_SQL, [booking_data['booking_id'], ])
 
         all_booking_detail_row = booking_detail_cursor.fetchall()
-        if all_booking_detail_row:
-            check_result = check_data(booking_data, all_booking_detail_row)
-            if len(check_result) <= 0:
-                start_time = time.time()
-                # 收集所有数据
-                booking_data = get_eid_data(booking_data, all_booking_detail_row)
-                if PROGRAM_DEBUG:
-                    spend_time = time.time() - start_time
-                    print(" ** Step1: 收集所有数据 " + "{:3.3f}".format(spend_time) + "s. ")
-
-                # 编写报文的内容
-                start_time = time.time()
-                content_list = encoding_edi_file(booking_data, connect_db)
-                if PROGRAM_DEBUG:
-                    spend_time = time.time() - start_time
-                    print(" ** Step2: 编写报文的内容 " + "{:3.6f}".format(spend_time) + "s. ")
-
-                # 保存文件
-                start_time = time.time()
-                filename = booking_data["booking_id"] + ".txt"
-                save_to_file(filename, content_list)
-                if PROGRAM_DEBUG:
-                    spend_time = time.time() - start_time
-                    print(" ** Step3: 生成新的报文文件 " + "{:3.6f}".format(spend_time) + "s. ")
-
-                # 更新数据库
-                status = 1
-            else:
-                # 更新数据库
-                status = 2
-            str_error = check_result
-        else:
-            status = 2
-            str_error = 'Booking detail can not not be empty.'
-
-        start_time = time.time()
-        data = [status, str_error, booking_data["booking_id"]]
-        update_sql(connect_db, UPDATE_BOOKING_STATUS_SQL, data)
-        if PROGRAM_DEBUG:
-            spend_time = time.time() - start_time
-            print(" ** Step4: 更新数据 " + "{:3.6f}".format(spend_time) + "s. ")
+        if all_booking_detail_row:    # 如何没有订单明细，则不做任何处理
+            make_edi_file(connect_db, booking_data, all_booking_detail_row)
 
         booking_detail_cursor.close()
-
-        # 连接FTP服务器
-        start_time = time.time()
-        ftp = create_ftp_connect(FTP_HOST, FTP_PORT, FTP_USERNAME, FTP_PASSWORD)
-        if ftp:
-            ftp.cwd(REMOTE_DIRECTORY)  # 转换至需要上传的目录
-            if PROGRAM_DEBUG:
-                spend_time = time.time() - start_time
-                print(" ** Step5: 连接远程的FTP服务器 " + "{:3.6f}".format(spend_time) + "s. ")
-
-            # 上传文件(上传整个目录的文件)
-            start_time = time.time()
-            files_list = []
-            local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)
-            bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)
-            files_list = get_file_list(local_path, files_list)
-            if files_list:
-                for file in files_list:
-                    (path, filename) = os.path.split(file)
-                    remote_file = filename
-                    if uploading_file(ftp, remote_file, filename):
-                        if PROGRAM_DEBUG:
-                            spend_time = time.time() - start_time
-                            print(" ** Step6: 成功上传文件 " + filename + "...." + "{:3.6f}".format(spend_time) + "s. ")
-                        # remove to bak
-                        try:
-                            # 上传成功后，将本地文件到备份目录中
-                            start_time = time.time()
-                            shutil.copy(file, bak_path)
-                            os.remove(file)
-                            if PROGRAM_DEBUG:
-                                spend_time = time.time() - start_time
-                                print(" ** Step7: 将文件 " + filename + "移至到备份目录中...." + "{:3.6f}".format(spend_time) + "s. ")
-                        except:
-                            if PROGRAM_DEBUG:
-                                spend_time = time.time() - start_time
-                                print(filename + " ** Step7: 将文件移至到备份目录失败...." + "{:3.6f}".format(spend_time) + "s. ")
-            # 关闭FTP连接
-            ftp.close()
-        else:
-            if PROGRAM_DEBUG:
-                spend_time = time.time() - start_time
-                print(" ** Step5: 连接远程的FTP服务器...失败 " + "{:3.6f}".format(spend_time) + "s. ")
-
 
     booking_cursor.close()
 
@@ -247,16 +240,23 @@ def main_progress(connect_db):
 
 # main progress
 if __name__ == "__main__":
-    is_connect_db = True
-    if REMOTE_DATABASE:  # 连接远程数据库
-        db_connect = connect_remote_db()
-        print("Connect REMOTE database success!")
-
-        while is_connect_db:
-            print("Begin Searching database...")
+    while True:
+        try:
+            db_connect = connect_remote_db()
+            print("Connect REMOTE database success!")
             main_progress(db_connect)
+            db_connect.close()
+
+            # 查询是否有需要上传的文件，如何有，就上传
+            files_list = []
+            local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)
+            files_list = get_file_list(local_path, files_list)
+            if files_list:
+                # 上传到FTP服务器
+                ftp_file(files_list)
+
             print("EDI SEND System Sleeping ...\n")
             time.sleep(EDI_SEND_SLEEP_TIME)
-        db_connect.close()
-    else:
-        print("Connect REMOTE database Failure!")
+        except:
+            time.sleep(60)
+

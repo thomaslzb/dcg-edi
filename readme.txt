@@ -31,15 +31,10 @@ source api-venv/bin/activate
 2.1 从数据库里读取数据，上传给长荣
 nohup python -u edi_send.py >/dev/null 2>&1 &
 
-2.2 从将本地文件上传到FTP
-nohup python -u ftp_uploading.py >/dev/null 2>&1 &
+2.2 从将FTP文件下载到本地，并且更新到数据库中
+nohup python -u edi_send.py >/dev/null 2>&1 &
 
 
-2.3 从FTP上下载文件到本地
-nohup python -u ftp_download.py >/dev/null 2>&1 &
-
-2.4 读本地文件写入到数据库中
-nohup python -u edi_confirm.py >/dev/null 2>&1 &
 
 
 

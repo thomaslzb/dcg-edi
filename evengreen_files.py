@@ -169,14 +169,18 @@ def encoding_edi_file(data, connect_db):
 
         # MEA+AAE+G+KGM:5540'
         if detail_data["weight_disc"] == 1:
-            weight = detail_data["weight"] * detail_data["quantity"]
+            if detail_data["quantity"] <= 0:
+                weight = detail_data["weight"] * 1
+            else:
+                weight = detail_data["weight"] * detail_data["quantity"]
         else:
             weight = detail_data["weight"]
 
         content_list.append("MEA+AAE+G+" + detail_data["weight_unit"] + ":" + str(weight).strip())
 
-        # MEA+AAE+AAW+MTQ:68'
-        content_list.append("MEA+AAE+AAW+" + detail_data["volume_unit"] + ":" + str(detail_data["volume"]))
+        if detail_data["volume"] > 0:
+            # MEA+AAE+AAW+MTQ:68'
+            content_list.append("MEA+AAE+AAW+" + detail_data["volume_unit"] + ":" + str(detail_data["volume"]))
 
         # SGP+01+916'
         content_list.append("SGP+" + "{:0>2d}".format(i) + "+" + str(detail_data["quantity"]))
