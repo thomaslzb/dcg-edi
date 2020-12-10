@@ -19,22 +19,20 @@ if __name__ == "__main__":
 
     begin_time = datetime.datetime.now()
 
-    SQL = "INSERT INTO booking_result (booking_id, carrier_booking_number,confirm_datetime, " \
-          "voyage_name, voyage_no, " \
-          "receipt_country, receipt_port, start_date, " \
-          "delivery_country, delivery_port, delivery_date, " \
-          "exchange_ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    SQL = "INSERT INTO route_timetable (message_code, message_date, route_name, " \
+          "voyage_name, voyage_no, place_of_delivery, " \
+          "place_of_delivery_date, place_of_receipt, place_of_receipt_date, " \
+          "place_of_loading, place_of_loading_date,place_of_discharge, " \
+          "place_of_discharge_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
     cursor = db_connect.cursor()
     try:
         cursor.fast_executemany = True
         date_string = '2020/12/07 01:00:39'
         a_date = datetime.datetime.strptime(date_string, '%Y/%m/%d %H:%M:%S')
-        data = [['dcgtestbooking005', '14200010519', datetime.datetime(2020, 11, 30, 11, 34),
-                 '9832729:::EVER GREE', '1118-006W',
-                 'TW', 'KHH', datetime.datetime(2020, 12, 18, 0, 0),
-                 'GB', 'FXT', datetime.datetime(2021, 1, 16, 0, 0),
-                 '2020113000059'], ]
+        data = [['14550', datetime.datetime(2020, 10, 19, 6, 8), 'China-Australia-Taiwan Service', 'ITAL LAGUNA', '096N', 'CNXMN', datetime.datetime(2020, 11, 6, 0, 0), 'AUSYD', datetime.datetime(2020, 10, 20, 0, 0), 'AUSYD', datetime.datetime(2020, 10, 20, 0, 0), 'CNXMN', datetime.datetime(2020, 11, 6, 0, 0)],
+                ['14551', datetime.datetime(2020, 10, 19, 6, 8), 'China-Australia-Taiwan Service', 'IRENES WAVE', '2047N', 'CNXMN', datetime.datetime(2021, 1, 1, 0, 0), 'AUSYD', datetime.datetime(2020, 12, 16, 0, 0), 'AUSYD', datetime.datetime(2020, 12, 16, 0, 0), 'CNXMN', datetime.datetime(2021, 1, 1, 0, 0)],
+                ]
         # cursor.executemany(SQL, data)
         abc = "DELETE FROM booking_result WHERE  booking_id= ? "
         dd = ["dcgtestbooking005", ]

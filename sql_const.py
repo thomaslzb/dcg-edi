@@ -76,3 +76,12 @@ INSERT_BOOKING_RESULT = "INSERT INTO booking_result  " \
                             "start_date, delivery_country, delivery_port, delivery_date, " \
                             "exchange_ref) " \
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+INSERT_ROUTE_TIMETABLE = "INSERT INTO route_timetable " \
+                         "(message_code, message_date, route_name, " \
+                         "voyage_name, voyage_no, " \
+                         "place_of_delivery, place_of_delivery_date, " \
+                         "place_of_receipt, place_of_receipt_date, " \
+                         "place_of_loading, place_of_loading_date," \
+                         "place_of_discharge, place_of_discharge_date) " \
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"

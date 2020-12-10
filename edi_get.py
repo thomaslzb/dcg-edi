@@ -16,9 +16,9 @@ import time
 
 from const import *
 from db_utils import *
-from encode_file import is_valid_file, encode_IFTMBC_file
+from encode_file import is_valid_file, encode_IFTMBC_file, encode_IFTSAI_file
 from ftp_tools import create_ftp_connect, is_ftp_file, download_file
-from sql_const import SELECT_BOOKING_SQL, INSERT_BOOKING_RESULT, UPDATE_BOOKING_STATUS_SQL
+from sql_const import SELECT_BOOKING_SQL, INSERT_BOOKING_RESULT, UPDATE_BOOKING_STATUS_SQL, INSERT_ROUTE_TIMETABLE
 
 
 def checked_file(connect_db, file_list):
@@ -80,11 +80,11 @@ def IFTMBC_file(ftp, connect_db, local_file, file):
     # 解码文件，并将数据存入列表中
     data_list = [encode_IFTMBC_file(local_file), ]
 
-    # 插入BOOKING CONFIRM的数据
+    # 插入BOOKING_RESULT 的数据
     insert_sql_many(connect_db, INSERT_BOOKING_RESULT, data_list)
     if PROGRAM_DEBUG:
         spend_time = time.time() - start_time
-        print(" ** Step4: 插入BOOKING CONFIRM的数据..." + "{:3.6f}".format(spend_time) + "s. ")
+        print(" ** Step4: 插入BOOKING_RESULT 的数据..." + "{:3.6f}".format(spend_time) + "s. ")
 
     # 更新BOOKING的状态
     start_time = time.time()
@@ -93,6 +93,51 @@ def IFTMBC_file(ftp, connect_db, local_file, file):
     if PROGRAM_DEBUG:
         spend_time = time.time() - start_time
         print(" ** Step5: 更新BOOKING的状态..." + "{:3.6f}".format(spend_time) + "s. ")
+
+    ftp.delete(file)  # 删除远程FTP文件
+    if PROGRAM_DEBUG:
+        spend_time = time.time() - start_time
+        print(" ** Step6: 删除远程FTP文件..." + "{:3.6f}".format(spend_time) + "s. ")
+
+    try:
+        # 将处理完成后的文件，移除到备份目录中
+        start_time = time.time()
+        shutil.copy(local_file, bak_path)
+        os.remove(local_file)
+        if PROGRAM_DEBUG:
+            spend_time = time.time() - start_time
+            print(" ** Step7: 将文件 " + file + "移至到备份目录中...."
+                  + "{:3.6f}".format(spend_time) + "s. ")
+    except:
+        if PROGRAM_DEBUG:
+            spend_time = time.time() - start_time
+            print(file + " ** Step6: 将文件移至到备份目录失败...."
+                  + "{:3.6f}".format(spend_time) + "s. ")
+
+
+def IFTSAI_file(ftp, connect_db, local_file, file):
+    """
+    处理IFTSAI 运输计划及实施信息报文
+    :param ftp: FTP 连接
+    :param connect_db: 数据库连接
+    :param local_file: 下载到本地目录的文件
+    :param file: 具体的文件名称
+    :return:
+    """
+
+    # 备份目录
+    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_DIR)
+
+    start_time = time.time()
+
+    # 解码文件，并将数据存入列表中
+    data_list = encode_IFTSAI_file(local_file)
+
+    # 插入BOOKING CONFIRM的数据
+    insert_sql_many(connect_db, INSERT_ROUTE_TIMETABLE, data_list)
+    if PROGRAM_DEBUG:
+        spend_time = time.time() - start_time
+        print(" ** Step4: 插入INSERT_ROUTE_TIMETABLE的数据..." + "{:3.6f}".format(spend_time) + "s. ")
 
     ftp.delete(file)  # 删除远程FTP文件
     if PROGRAM_DEBUG:
@@ -156,9 +201,9 @@ def handle_file(ftp, connect_db, all_files):
                 # IFTMBC 订舱确认报文
                 IFTMBC_file(ftp, connect_db, local_file, file)
 
-            # if is_valid_file(local_file, "IFTSAI"):
-            # IFTSAI 运输计划及实施信息报文
-                # IFTSAI_file(ftp, connect_db, local_file, file)
+            if is_valid_file(local_file, "IFTSAI"):
+                # IFTSAI 运输计划及实施信息报文
+                IFTSAI_file(ftp, connect_db, local_file, file)
             # end if
         # end for
     # end if
