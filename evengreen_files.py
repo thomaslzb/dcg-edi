@@ -62,7 +62,7 @@ def encoding_edi_file(data, connect_db):
     # UNB+UNOA:3+DCG+EGLV:ZZZ+201123:1409+DCG2001'
     op_date = datetime.datetime.now().strftime("%y%m%d")
     op_time = datetime.datetime.now().strftime("%H%M")
-    content_list.append("UNB+UNOA:3+DCG+EGLV:ZZZ+" + op_date + ":" + op_time + "+" + data["booking_id"])
+    content_list.append("UNB+UNOA:3+DCG:AA+EVERGREEN:ZZ+" + op_date + ":" + op_time + "+" + data["booking_id"])
 
     # UNH+DCG2001+IFTMBF:D:99B:UN:2.0'
     content_list.append("UNH+" + data["booking_id"] + "+IFTMBF:D:99B:UN:2.0")
