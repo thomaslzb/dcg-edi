@@ -1,0 +1,134 @@
+2021-01-08 18:32:00,180 INFO: ============================ System restart ============================
+2021-01-08 18:32:00,181 INFO: Begin parse the file 20201220156607.txt
+2021-01-08 18:32:01,772 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6226 and taken times 1.539034s. 
+2021-01-08 18:32:04,065 INFO:  ***** CONNECT DATABASE have taken 2.293491s. 
+2021-01-08 18:32:13,972 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 9.906816s. 
+2021-01-08 18:32:13,983 INFO:  ***** BACKUP File ...0.010968s. 
+2021-01-08 18:32:13,986 INFO: Finished parse the file 20201220156607.txt Taken 13.805307s. 
+
+2021-01-08 18:32:13,986 INFO: Begin parse the file 20201221228206.txt
+2021-01-08 18:32:15,492 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6274 and taken times 1.456998s. 
+2021-01-08 18:32:15,719 INFO:  ***** CONNECT DATABASE have taken 0.226688s. 
+2021-01-08 18:32:20,673 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 4.954352s. 
+2021-01-08 18:32:20,688 INFO:  ***** BACKUP File ...0.014740s. 
+2021-01-08 18:32:20,691 INFO: Finished parse the file 20201221228206.txt Taken 6.704821s. 
+
+2021-01-08 18:32:20,692 INFO: Begin parse the file 20201222475138.txt
+2021-01-08 18:32:22,184 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6202 and taken times 1.443415s. 
+2021-01-08 18:32:22,414 INFO:  ***** CONNECT DATABASE have taken 0.230182s. 
+2021-01-08 18:32:27,092 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 4.677332s. 
+2021-01-08 18:32:27,103 INFO:  ***** BACKUP File ...0.010002s. 
+2021-01-08 18:32:27,105 INFO: Finished parse the file 20201222475138.txt Taken 6.412604s. 
+
+2021-01-08 18:32:27,105 INFO: Begin parse the file 20201223226409.txt
+2021-01-08 18:32:28,666 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6285 and taken times 1.510034s. 
+2021-01-08 18:32:28,895 INFO:  ***** CONNECT DATABASE have taken 0.229786s. 
+2021-01-08 18:32:34,023 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 5.127132s. 
+2021-01-08 18:32:34,033 INFO:  ***** BACKUP File ...0.009997s. 
+2021-01-08 18:32:34,036 INFO: Finished parse the file 20201223226409.txt Taken 6.930910s. 
+
+2021-01-08 18:32:34,036 INFO: Begin parse the file 20201224471991.txt
+2021-01-08 18:32:35,603 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6271 and taken times 1.517028s. 
+2021-01-08 18:32:35,833 INFO:  ***** CONNECT DATABASE have taken 0.228914s. 
+2021-01-08 18:32:41,371 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 5.538794s. 
+2021-01-08 18:32:41,387 INFO:  ***** BACKUP File ...0.015593s. 
+2021-01-08 18:32:41,390 INFO: Finished parse the file 20201224471991.txt Taken 7.354365s. 
+
+2021-01-08 18:32:41,390 INFO: Begin parse the file 20201225184337.txt
+2021-01-08 18:32:42,953 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6245 and taken times 1.512003s. 
+2021-01-08 18:32:43,178 INFO:  ***** CONNECT DATABASE have taken 0.224996s. 
+2021-01-08 18:32:48,448 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 5.270421s. 
+2021-01-08 18:32:48,464 INFO:  ***** BACKUP File ...0.014971s. 
+2021-01-08 18:32:48,469 INFO: Finished parse the file 20201225184337.txt Taken 7.079389s. 
+
+2021-01-08 18:32:48,469 INFO: Begin parse the file 20201226277674.txt
+2021-01-08 18:32:49,998 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6116 and taken times 1.475080s. 
+2021-01-08 18:32:50,219 INFO:  ***** CONNECT DATABASE have taken 0.220621s. 
+2021-01-08 18:32:55,491 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 5.271537s. 
+2021-01-08 18:32:55,506 INFO:  ***** BACKUP File ...0.015002s. 
+2021-01-08 18:32:55,509 INFO: Finished parse the file 20201226277674.txt Taken 7.039237s. 
+
+2021-01-08 18:32:55,509 INFO: Begin parse the file 20201227059508.txt
+2021-01-08 18:32:57,039 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6070 and taken times 1.478043s. 
+2021-01-08 18:32:57,267 INFO:  ***** CONNECT DATABASE have taken 0.228090s. 
+2021-01-08 18:33:02,543 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 5.275366s. 
+2021-01-08 18:33:02,553 INFO:  ***** BACKUP File ...0.010000s. 
+2021-01-08 18:33:02,555 INFO: Finished parse the file 20201227059508.txt Taken 7.046387s. 
+
+2021-01-08 18:33:02,556 INFO: Begin parse the file 20201228296705.txt
+2021-01-08 18:33:04,064 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6023 and taken times 1.456580s. 
+2021-01-08 18:33:04,295 INFO:  ***** CONNECT DATABASE have taken 0.231846s. 
+2021-01-08 18:33:10,386 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 6.090342s. 
+2021-01-08 18:33:10,400 INFO:  ***** BACKUP File ...0.013973s. 
+2021-01-08 18:33:10,403 INFO: Finished parse the file 20201228296705.txt Taken 7.846821s. 
+
+2021-01-08 18:33:10,403 INFO: Begin parse the file 20201229222890.txt
+2021-01-08 18:33:11,889 INFO:  ***** ENCODE IFTSAI - The total recodes number is 5987 and taken times 1.436529s. 
+2021-01-08 18:33:12,114 INFO:  ***** CONNECT DATABASE have taken 0.224955s. 
+2021-01-08 18:33:18,588 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 6.473838s. 
+2021-01-08 18:33:18,602 INFO:  ***** BACKUP File ...0.013971s. 
+2021-01-08 18:33:18,605 INFO: Finished parse the file 20201229222890.txt Taken 8.202253s. 
+
+2021-01-08 18:33:18,605 INFO: Begin parse the file 20201231011750.txt
+2021-01-08 18:33:20,123 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6063 and taken times 1.466596s. 
+2021-01-08 18:33:20,351 INFO:  ***** CONNECT DATABASE have taken 0.228045s. 
+2021-01-08 18:33:26,967 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 6.615891s. 
+2021-01-08 18:33:26,981 INFO:  ***** BACKUP File ...0.013998s. 
+2021-01-08 18:33:26,984 INFO: Finished parse the file 20201231011750.txt Taken 8.378499s. 
+
+2021-01-08 18:33:26,984 INFO: Begin parse the file 20201231222764.txt
+2021-01-08 18:33:28,494 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6103 and taken times 1.454181s. 
+2021-01-08 18:33:28,713 INFO:  ***** CONNECT DATABASE have taken 0.219156s. 
+2021-01-08 18:33:35,692 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 6.978631s. 
+2021-01-08 18:33:35,707 INFO:  ***** BACKUP File ...0.014000s. 
+2021-01-08 18:33:35,710 INFO: Finished parse the file 20201231222764.txt Taken 8.726004s. 
+
+2021-01-08 18:33:35,710 INFO: Begin parse the file 20210101095466.txt
+2021-01-08 18:33:36,700 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6069 and taken times 0.957078s. 
+2021-01-08 18:33:36,925 INFO:  ***** CONNECT DATABASE have taken 0.225059s. 
+2021-01-08 18:33:44,443 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 7.517961s. 
+2021-01-08 18:33:44,453 INFO:  ***** BACKUP File ...0.010000s. 
+2021-01-08 18:33:44,457 INFO: Finished parse the file 20210101095466.txt Taken 8.747099s. 
+
+2021-01-08 18:33:44,457 INFO: Begin parse the file 20210102171775.txt
+2021-01-08 18:33:45,433 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6066 and taken times 0.942509s. 
+2021-01-08 18:33:45,661 INFO:  ***** CONNECT DATABASE have taken 0.228002s. 
+2021-01-08 18:33:53,279 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 7.617235s. 
+2021-01-08 18:33:53,293 INFO:  ***** BACKUP File ...0.014034s. 
+2021-01-08 18:33:53,296 INFO: Finished parse the file 20210102171775.txt Taken 8.839777s. 
+
+2021-01-08 18:33:53,296 INFO: Begin parse the file 20210103070612.txt
+2021-01-08 18:33:54,274 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6065 and taken times 0.945003s. 
+2021-01-08 18:33:54,497 INFO:  ***** CONNECT DATABASE have taken 0.221999s. 
+2021-01-08 18:34:00,929 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 6.431581s. 
+2021-01-08 18:34:00,943 INFO:  ***** BACKUP File ...0.014003s. 
+2021-01-08 18:34:00,947 INFO: Finished parse the file 20210103070612.txt Taken 7.650554s. 
+
+2021-01-08 18:34:00,947 INFO: Begin parse the file 20210104312153.txt
+2021-01-08 18:34:01,932 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6097 and taken times 0.951000s. 
+2021-01-08 18:34:02,152 INFO:  ***** CONNECT DATABASE have taken 0.219999s. 
+2021-01-08 18:34:08,303 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 6.149780s. 
+2021-01-08 18:34:08,317 INFO:  ***** BACKUP File ...0.014001s. 
+2021-01-08 18:34:08,323 INFO: Finished parse the file 20210104312153.txt Taken 7.375779s. 
+
+2021-01-08 18:34:08,323 INFO: Begin parse the file 20210105216698.txt
+2021-01-08 18:34:09,323 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6045 and taken times 0.964998s. 
+2021-01-08 18:34:09,546 INFO:  ***** CONNECT DATABASE have taken 0.223000s. 
+2021-01-08 18:34:16,328 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 6.782040s. 
+2021-01-08 18:34:16,342 INFO:  ***** BACKUP File ...0.014000s. 
+2021-01-08 18:34:16,345 INFO: Finished parse the file 20210105216698.txt Taken 8.022037s. 
+
+2021-01-08 18:34:16,345 INFO: Begin parse the file 20210106453336.txt
+2021-01-08 18:34:17,382 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6290 and taken times 1.002542s. 
+2021-01-08 18:34:17,609 INFO:  ***** CONNECT DATABASE have taken 0.226999s. 
+2021-01-08 18:34:24,690 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 7.080825s. 
+2021-01-08 18:34:24,704 INFO:  ***** BACKUP File ...0.014033s. 
+2021-01-08 18:34:24,707 INFO: Finished parse the file 20210106453336.txt Taken 8.361414s. 
+
+2021-01-08 18:34:24,707 INFO: Begin parse the file 20210107225988.txt
+2021-01-08 18:34:25,682 INFO:  ***** ENCODE IFTSAI - The total recodes number is 5932 and taken times 0.941985s. 
+2021-01-08 18:34:25,913 INFO:  ***** CONNECT DATABASE have taken 0.230033s. 
+2021-01-08 18:34:33,129 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 7.214337s. 
+2021-01-08 18:34:33,138 INFO:  ***** BACKUP File ...0.009016s. 
+2021-01-08 18:34:33,141 INFO: Finished parse the file 20210107225988.txt Taken 8.432355s. 
+

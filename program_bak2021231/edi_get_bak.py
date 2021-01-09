@@ -17,7 +17,7 @@ import time
 from const import *
 from db_utils import *
 from encode_file import is_valid_file, encode_IFTMBC_file, encode_IFTSAI_file
-from ftp_tools import create_ftp_connect, is_ftp_file, download_file
+from ftp_tools import create_ftp_connect, is_ftp_file, begin_download_file
 from sql_const import SELECT_BOOKING_SQL, INSERT_BOOKING_RESULT, UPDATE_BOOKING_STATUS_SQL, INSERT_ROUTE_TIMETABLE
 
 
@@ -56,7 +56,10 @@ def download_file_to_local(ftp_connect, files_list, local_path):
     download_files_success = []
     for file in files_list:
         local_name = os.path.join(local_path, file)
-        if download_file(ftp_connect, file, local_name):
+        start_time = time.time()
+        if begin_download_file(ftp_connect, file, local_name):
+            spend_time = time.time() - start_time
+            print(" ********: 成功下载文件 -- "+local_name+".... " + "{:3.6f}".format(spend_time) + "s. ")
             download_files_success.append(file)
 
     return download_files_success
@@ -173,24 +176,28 @@ def handle_file(ftp, connect_db, all_files):
 
     # 区分需要处理的文件或需要删除的文件
     files = checked_file(connect_db, all_files)
+    spend_time = time.time() - start_time
+    print(" ** Step2: 检查是否有需要删除的远程文件" + "{:3.6f}".format(spend_time) + "s. ")
+
     delete_files = files[0]
     download_files = files[1]
 
+    start_time = time.time()
     for file in delete_files:
         ftp.delete(file)  # 删除远程FTP文件
-
-    if PROGRAM_DEBUG:
-        spend_time = time.time() - start_time
-        print(" ** Step2: 删除已经处理完成的远程FTP文件" + "{:3.6f}".format(spend_time) + "s. ")
+        if PROGRAM_DEBUG:
+            spend_time = time.time() - start_time
+            print(" ** Step3: 删除已经处理完成的远程FTP文件" + "{:3.6f}".format(spend_time) + "s. ")
 
     if download_files:
         local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_DIR)
         start_time = time.time()
+        print(" ** Step3: 开始下载需要处理的文件到本地" + "{:3.6f}".format(spend_time) + "s. ")
         # 下载需要的文件，下载成功后，删除文件
         success_download_files = download_file_to_local(ftp, download_files, local_path)
         if PROGRAM_DEBUG:
             spend_time = time.time() - start_time
-            print(" ** Step3: 下载需要处理的文件到本地" + "{:3.6f}".format(spend_time) + "s. ")
+            print(" ** Step3: 完成下载需要处理的文件到本地" + "{:3.6f}".format(spend_time) + "s. ")
 
         for file in success_download_files:
 
@@ -204,7 +211,6 @@ def handle_file(ftp, connect_db, all_files):
             if is_valid_file(local_file, "IFTSAI"):
                 # IFTSAI 运输计划及实施信息报文
                 IFTSAI_file(ftp, connect_db, local_file, file)
-            # end if
         # end for
     # end if
 
@@ -240,13 +246,13 @@ def main_progress(connect_db):
 # main progress
 if __name__ == "__main__":
     while True:
-        try:
-            db_connect = connect_remote_db()
-            print("Connect REMOTE database success!")
-            main_progress(db_connect)
-            print("EDI SEND System Sleeping ...\n")
-            db_connect.close()
-            time.sleep(EDI_GET_SLEEP_TIME)
-        except:
-            print("Connect REMOTE database Failure! Sleep 30s, Try again!")
-            time.sleep(30)
+        # try:
+        db_connect = connect_remote_db()
+        print("Connect REMOTE database success!")
+        main_progress(db_connect)
+        print("EDI SEND System Sleeping ...\n")
+        db_connect.close()
+        time.sleep(EDI_GET_SLEEP_TIME)
+        # except:
+        #     print("Connect REMOTE database Failure! Sleep 30s, Try again!")
+        #     time.sleep(30)

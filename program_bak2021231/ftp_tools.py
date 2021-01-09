@@ -86,7 +86,7 @@ def is_ftp_file(ftp_conn, ftp_path):
         return False
 
 
-def download_file(ftp_connect, remote_name, local_name):
+def begin_download_file(ftp_connect, remote_name, local_name):
     """
      下载文件
     :param ftp_connect:

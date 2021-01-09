@@ -9,22 +9,9 @@
 ------------      -------    --------    -----------
 14/10/2020 12:56   lzb       1.0         None
 """
-import pymysql
+import logging
 import pyodbc
 from const import *
-
-
-# 连接数据库
-def connect_local_db():
-    connect = pymysql.Connect(
-        host=IP_DB_LOCAL,
-        port=3306,
-        user=LOCAL_DATABASE_USERNAME,
-        passwd=LOCAL_DATABASE_PWD,
-        db=LOCAL_DATABASE_NAME,
-        charset='utf8'
-    )
-    return connect
 
 
 # 连接数据库
@@ -74,6 +61,7 @@ def update_sql(db_connects, sql, data):
         cursor.execute(sql, data)
         db_connects.commit()
     except:
+        logging.exception("exception")
         db_connects.rollback()
     cursor.close()
 
@@ -90,6 +78,7 @@ def insert_sql(db_connects, sql, data):
         cursor.execute(sql, data)
         db_connects.commit()
     except:
+        logging.exception("exception")
         db_connects.rollback()
     cursor.close()
 
@@ -107,6 +96,7 @@ def insert_sql_many(db_connects, sql, data):
         cursor.executemany(sql, data)
         db_connects.commit()
     except:
+        logging.exception("exception")
         db_connects.rollback()
     cursor.close()
 
