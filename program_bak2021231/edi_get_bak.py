@@ -190,7 +190,7 @@ def handle_file(ftp, connect_db, all_files):
             print(" ** Step3: 删除已经处理完成的远程FTP文件" + "{:3.6f}".format(spend_time) + "s. ")
 
     if download_files:
-        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_DIR)
+        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
         start_time = time.time()
         print(" ** Step3: 开始下载需要处理的文件到本地" + "{:3.6f}".format(spend_time) + "s. ")
         # 下载需要的文件，下载成功后，删除文件
@@ -219,7 +219,7 @@ def main_progress(connect_db):
     start_time = time.time()
     ftp = create_ftp_connect(FTP_HOST, FTP_PORT, FTP_USERNAME, FTP_PASSWORD)
     if ftp:
-        ftp.cwd(REMOTE_DIRECTORY)  # 转换至需要下载文件的目录
+        ftp.cwd(REMOTE_FPT_PATH)  # 转换至需要下载文件的目录
 
         if PROGRAM_DEBUG:
             spend_time = time.time() - start_time
@@ -252,7 +252,7 @@ if __name__ == "__main__":
         main_progress(db_connect)
         print("EDI SEND System Sleeping ...\n")
         db_connect.close()
-        time.sleep(EDI_GET_SLEEP_TIME)
+        time.sleep(3600)
         # except:
         #     print("Connect REMOTE database Failure! Sleep 30s, Try again!")
         #     time.sleep(30)

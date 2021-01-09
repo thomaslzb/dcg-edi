@@ -21,7 +21,7 @@ from encode_file import is_valid_file, encode_IFTMBC_file, encode_IFTSAI_file
 from sql_const import *
 
 
-def IFTMBC_file(connect_db, local_file, file):
+def IFTMBC_file(local_file, file):
     """
     处理IFTMBC 订舱确认报文, 并更新到数据库中
     :param local_file: 下载到本地目录的文件
@@ -145,4 +145,4 @@ if __name__ == "__main__":
     while True:
         parser_file()
         print("Sleeping....")
-        time.sleep(EDI_GET_SLEEP_TIME)
+        time.sleep(EDI_PARSER_SLEEP_TIME)

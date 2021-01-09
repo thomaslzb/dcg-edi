@@ -7,11 +7,12 @@
 
 @Modify Time      @Author    @Version    @Desciption
 ------------      -------    --------    -----------
-05/01/2021 17:13   lzb       1.0         None
+05/01/2021 17:13   lzb       1.0         ftp client
 
 https://www.thinbug.com/q/19245769
 https://github.com/keepitsimple/pyFTPclient
 """
+import os
 
 from const import *
 import threading
@@ -58,40 +59,48 @@ class PyFTPclient:
         self.max_attempts = 15
         self.waiting = True
 
-    def download_testing(self, dst_filename, local_filename=None):
-        if local_filename is None:
-            local_filename = dst_filename
-
-        ftp = ftplib.FTP()
-        ftp.set_debuglevel(2)
-        ftp.set_pasv(True)
+    def connect(self, ftp, dst_path=None):
+        if dst_path is None:
+            dst_path = ""
 
         ftp.connect(self.host, self.port)
         ftp.login(self.login, self.passwd)
-        ftp.af = socket.AF_INET6  # IMPORTMENT: force ftplib to use EPSV by setting
-        # ftp.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        # ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 75)
-        # ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
+        #  ======================== VERY IMPORTANT ===========================
+        ftp.af = socket.AF_INET6  # 这个设置非常重要: force ftplib to use EPSV by setting
+        #  ======================== VERY IMPORTANT ===========================
+        # optimize socket params for download task
+        ftp.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 75)
+        ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
+        ftp.cwd(dst_path)  # 转换至需要的FTP目标目录
 
-        # ftp.voidcmd('TYPE I')
+    def isHaveFtpPath(self, ftp, dst_ftp_path=None):
+        if dst_ftp_path is None:
+            dst_ftp_path = ""
         try:
-            ftp.cwd(REMOTE_DIRECTORY)  # 转换至需要上传的目录
+            if dst_ftp_path in ftp.nlst(os.path.dirname(dst_ftp_path)):
+                return True
+            else:
+                return False
+        except ftplib.error_perm:
+            return False
 
-            bufsize = 1024  # 设置缓冲块大小
-            fp = open(local_filename, 'wb')  # 以写模式在本地打开文件
-
-            res = ftp.retrbinary('RETR ' + dst_filename, fp.write, bufsize)  # 接收服务器上文件并写入本地文件
-        except:
-            logging.info('waiting 30 sec...')
-
-        if res.find('226') != -1:
-            is_download = True
-            # print('download file complete', local_name)
-        ftp.set_debuglevel(0)  # 关闭调试
-
-    def DownloadFile(self, dst_filename, local_filename=None):
+    def DownloadFile(self, dst_filename, local_filename=None, dst_path=None):
+        """
+        下载文件函数
+        :param dst_filename: 目标文件名
+        :param local_filename: 本地文件名
+        :param dst_path: 目标目录
+        :return: 1 = Success None = Failure
+        """
+        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
         if local_filename is None:
             local_filename = dst_filename
+
+        local_filename = os.path.join(local_path, local_filename)
+
+        if dst_path is None:
+            dst_path = ""
 
         with open(local_filename, 'wb') as f:
             self.ptr = f.tell()
@@ -101,35 +110,23 @@ class PyFTPclient:
                 if not self.waiting:
                     i = f.tell()
                     if self.ptr < i:
-                        logging.debug("%d  -  %0.1f Kb/s" % (i, (i-self.ptr)/(1024*self.monitor_interval)))
+                        logging.info("File size is %d  - speed is %0.1f Kb/s" % (i, (i-self.ptr)/(1024*self.monitor_interval)))
                         self.ptr = i
                     else:
                         ftp.close()
-
-            def connect():
-                ftp.connect(self.host, self.port)
-                ftp.login(self.login, self.passwd)
-                #  ======================== VERY IMPORTANT ===========================
-                ftp.af = socket.AF_INET6   # VERY IMPORTANT: force ftplib to use EPSV by setting
-                #  ======================== VERY IMPORTANT ===========================
-                # optimize socket params for download task
-                ftp.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 75)
-                ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
 
             ftp = ftplib.FTP()
             ftp.set_debuglevel(2)
             ftp.set_pasv(True)
 
-            connect()
+            self.connect(ftp, dst_path)
             ftp.voidcmd('TYPE I')
-            ftp.cwd(REMOTE_DIRECTORY)  # 转换至需要上传的目录
-            dst_filesize = ftp.size(dst_filename)
+            dst_file_size = ftp.size(dst_filename)
 
-            # mon = monitor()
-            while dst_filesize > f.tell():
+            mon = monitor()   # begin monitor
+            while dst_file_size > f.tell():
                 try:
-                    # connect()
+                    self.connect(ftp, dst_path)
                     self.waiting = False
                     # retrieve file from position where we were disconnected
                     res = ftp.retrbinary('RETR %s' % dst_filename, f.write) if f.tell() == 0 else \
@@ -138,29 +135,54 @@ class PyFTPclient:
                 except:
                     self.max_attempts -= 1
                     if self.max_attempts == 0:
-                        # mon.set()
+                        mon.set()
                         logging.exception('')
-                        raise
+                        # raise
+                        logging.debug("max attempts 30 times.")
                     self.waiting = True
                     logging.info('waiting 30 sec...')
                     time.sleep(30)
                     logging.info('reconnect')
 
-            # mon.set()  #stop monitor
+            mon.set()  # stop monitor
             ftp.close()
 
-            if not res.startswith('226 Transfer complete'):
-                logging.error('Downloaded file {0} is not full.'.format(dst_filename))
-                # os.remove(local_filename)
+            try:
+                if not res.startswith('226 Transfer complete'):
+                    logging.error('Downloaded file {0} is not full.'.format(dst_filename))
+                    # os.remove(local_filename)
+                    return None
+            except:
+                logging.debug("Res Error")
                 return None
-
             return 1
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename=LOCAL_LOG_DIR, format='%(asctime)s %(levelname)s: %(message)s',
+    logging.basicConfig(filename=FTP_LOG_FILENAME, format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG)
-    # logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=cfg.logging.level)
     obj = PyFTPclient(FTP_HOST, port=FTP_PORT, login=FTP_USERNAME, passwd=FTP_PASSWORD)
-    # obj.download_testing('demo.log')
-    obj.DownloadFile('demo.log')
+    while True:
+        ftp_connect = ftplib.FTP()
+        ftp_connect.set_debuglevel(2)
+        ftp_connect.set_pasv(True)
+
+        obj.connect(ftp_connect, REMOTE_FPT_PATH)
+
+        all_files_name = ftp_connect.nlst()  # 获取远程FTP的所有文件名
+
+        for file_name in all_files_name:
+            start_time = time.time()
+            logging.info("Downloading file:" + file_name)
+            if obj.DownloadFile(file_name, None, REMOTE_FPT_PATH):
+                info_status = "Success"
+                # 下载成功后，删除远程的文件
+                # ftp_connect.delete(file_name)  # 删除远程FTP文件
+            else:
+                info_status = "Failure"
+
+            spend_time = time.time() - start_time
+            logging.info(info_status + " download file: " + file_name + "... {:3.6f}".format(spend_time) + "s. ")
+
+        ftp_connect.close()
+        time.sleep(FTP_SLEEP_TIME)
