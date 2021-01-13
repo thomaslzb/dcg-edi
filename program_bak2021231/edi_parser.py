@@ -30,7 +30,7 @@ def IFTMBC_file(local_file, file):
     """
 
     # 备份目录
-    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_DIR)
+    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_PATH)
 
     # 解码文件，并将数据存入列表中
     data_list = [encode_IFTMBC_file(local_file), ]
@@ -51,7 +51,7 @@ def IFTSAI_file(local_file, file):
     """
 
     # 备份目录
-    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_DIR)
+    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_PATH)
 
     start_time = time.time()
 
@@ -112,27 +112,28 @@ def parser_file():
     """
     # 需要处理的文件
 
-    local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_DIR)
+    local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
 
     local_files = os.listdir(local_path)
     for file in local_files:
-        logging.info("Begin parse the file " + file)
-        print("Begin parse the file " + file)
-        start_time = time.time()
-        # 处理已经下载的文件，更新到数据库中
-        local_file = os.path.join(local_path, file)
+        if file.startswith("Success"):
+            logging.info("Begin parse the file " + file)
+            print("Begin parse the file " + file)
+            start_time = time.time()
+            # 处理已经下载的文件，更新到数据库中
+            local_file = os.path.join(local_path, file)
 
-        if is_valid_file(local_file, "IFTMBC"):
-            # IFTMBC 订舱确认报文
-            IFTMBC_file(local_file, file)
+            if is_valid_file(local_file, "IFTMBC"):
+                # IFTMBC 订舱确认报文
+                IFTMBC_file(local_file, file)
 
-        if is_valid_file(local_file, "IFTSAI"):
-            # IFTSAI 运输计划及实施信息报文
-            IFTSAI_file(local_file, file)
-        # end if
-        spend_time = time.time() - start_time
-        logging.info("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. \n")
-        print("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. ")
+            if is_valid_file(local_file, "IFTSAI"):
+                # IFTSAI 运输计划及实施信息报文
+                IFTSAI_file(local_file, file)
+            # end if
+            spend_time = time.time() - start_time
+            logging.info("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. \n")
+            print("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. ")
     # end for
 
 

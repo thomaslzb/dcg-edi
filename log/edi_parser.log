@@ -132,3 +132,32 @@
 2021-01-08 18:34:33,138 INFO:  ***** BACKUP File ...0.009016s. 
 2021-01-08 18:34:33,141 INFO: Finished parse the file 20210107225988.txt Taken 8.432355s. 
 
+2021-01-10 10:48:23,115 INFO: ============================ System restart ============================
+2021-01-10 10:49:34,964 INFO: ============================ System restart ============================
+2021-01-10 10:50:26,477 INFO: ============================ System restart ============================
+2021-01-10 10:51:54,544 INFO: ============================ System restart ============================
+2021-01-10 10:51:54,544 INFO: Begin parse the file Success20210108493097.txt
+2021-01-10 10:51:55,537 INFO:  ***** ENCODE IFTSAI - The total recodes number is 6000 and taken times 0.957999s. 
+2021-01-10 10:51:58,849 INFO:  ***** CONNECT DATABASE have taken 3.312140s. 
+2021-01-10 12:17:10,732 INFO: ============================ System restart ============================
+2021-01-10 12:18:44,644 INFO: ============================ System restart ============================
+2021-01-10 12:18:47,638 INFO: Begin parse the file SUCCESS20201130000599.txt
+2021-01-11 14:29:45,332 INFO: ============================ System restart ============================
+2021-01-11 14:30:04,798 INFO: ============================ System restart ============================
+2021-01-11 14:30:19,510 INFO: Begin parse the file SUCCESS20201130000599.txt
+2021-01-11 14:32:16,342 INFO:  ***** CONNECT DATABASE have taken 28.428131s. 
+2021-01-11 14:34:59,678 INFO: ============================ System restart ============================
+2021-01-11 14:35:12,182 INFO: Begin parse the file SUCCESS20201130000599.txt
+2021-01-11 14:36:17,847 INFO: ============================ System restart ============================
+2021-01-11 14:36:17,849 INFO: Begin parse the file SUCCESS20201130000599.txt
+2021-01-11 14:36:57,405 INFO:  ***** CONNECT DATABASE have taken 10.960702s. 
+2021-01-11 14:37:36,997 ERROR: exception
+Traceback (most recent call last):
+  File "C:\DCG\GitHub\dcg-edi\db_utils.py", line 96, in insert_sql_many
+    cursor.executemany(sql, data)
+pyodbc.ProgrammingError: ('Expected 11 parameters, supplied 12', 'HY000')
+2021-01-11 14:39:34,713 INFO: ============================ System restart ============================
+2021-01-11 14:39:34,715 INFO: Begin parse the file SUCCESS20201130000599.txt
+2021-01-11 14:39:44,477 INFO:  ***** CONNECT DATABASE have taken 4.082091s. 
+2021-01-11 14:40:01,192 INFO:  ***** INSERT_ROUTE_TIMETABLE Data have taken 15.895880s. 
+2021-01-11 14:40:01,203 INFO:  ***** BACKUP File ...0.010995s. 

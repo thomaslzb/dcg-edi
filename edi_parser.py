@@ -17,11 +17,11 @@ import time
 
 from const import *
 from db_utils import *
-from encode_file import is_valid_file, encode_IFTMBC_file, encode_IFTSAI_file
+from decode_file import is_valid_file, encode_IFTMBC_file, encode_IFTSAI_file
 from sql_const import *
 
 
-def IFTMBC_file(connect_db, local_file, file):
+def IFTMBC_file(local_file, file):
     """
     处理IFTMBC 订舱确认报文, 并更新到数据库中
     :param local_file: 下载到本地目录的文件
@@ -30,13 +30,13 @@ def IFTMBC_file(connect_db, local_file, file):
     """
 
     # 备份目录
-    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_DIR)
+    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_PATH)
 
     # 解码文件，并将数据存入列表中
-    data_list = [encode_IFTMBC_file(local_file), ]
+    data_list = encode_IFTMBC_file(local_file)
 
     if data_list:
-        insert_data(UPDATE_BOOKING_STATUS_SQL, data_list, local_file, bak_path)
+        insert_data(INSERT_BOOKING_RESULT, data_list, local_file, bak_path)
     else:
         print(" ***** No data have been found.")
         logging.info(" ***** No data have been found.")
@@ -49,9 +49,8 @@ def IFTSAI_file(local_file, file):
     :param file: 具体的文件名称
     :return:
     """
-
     # 备份目录
-    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_DIR)
+    bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_BACKUP_PATH)
 
     start_time = time.time()
 
@@ -72,7 +71,7 @@ def IFTSAI_file(local_file, file):
 
 def insert_data(sql, data_list, local_file, bak_path):
     """
-    #
+    将数据更新进数据库
     :param sql: 需要插入的sql语句
     :param data_list: 需要更新的数据
     :param local_file: 本地文件
@@ -112,37 +111,37 @@ def parser_file():
     """
     # 需要处理的文件
 
-    local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_DIR)
+    local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
 
     local_files = os.listdir(local_path)
     for file in local_files:
-        logging.info("Begin parse the file " + file)
-        print("Begin parse the file " + file)
-        start_time = time.time()
-        # 处理已经下载的文件，更新到数据库中
-        local_file = os.path.join(local_path, file)
+        if file.startswith(FILE_HEADER):   # 只处理成功完成下载的文件
+            logging.info("Begin parse the file " + file)
+            print("Begin parse the file " + file)
+            start_time = time.time()
+            local_file = os.path.join(local_path, file)
 
-        if is_valid_file(local_file, "IFTMBC"):
-            # IFTMBC 订舱确认报文
-            IFTMBC_file(local_file, file)
+            if is_valid_file(local_file, "IFTMBC"):
+                # IFTMBC 订舱确认报文
+                IFTMBC_file(local_file, file)
 
-        if is_valid_file(local_file, "IFTSAI"):
-            # IFTSAI 运输计划及实施信息报文
-            IFTSAI_file(local_file, file)
-        # end if
-        spend_time = time.time() - start_time
-        logging.info("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. \n")
-        print("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. ")
+            if is_valid_file(local_file, "IFTSAI"):
+                # IFTSAI 运输计划及实施信息报文
+                IFTSAI_file(local_file, file)
+            # end if
+            spend_time = time.time() - start_time
+            logging.info("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. \n")
+            print("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. ")
     # end for
 
 
 # main progress
 if __name__ == "__main__":
-    logging.basicConfig(filename=LOG_EDI_PARSER_FILE, format='%(asctime)s %(levelname)s: %(message)s',
+    logging.basicConfig(filename=LOG_EDI_PARSER, format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG)
     print("System restart ....")
-    logging.info("============================ System restart ============================")
+    logging.info("============================ EDI Parser System restart ============================")
     while True:
         parser_file()
+        time.sleep(EDI_PARSER_SLEEP_TIME)
         print("Sleeping....")
-        time.sleep(EDI_GET_SLEEP_TIME)

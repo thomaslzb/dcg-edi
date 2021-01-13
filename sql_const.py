@@ -74,7 +74,7 @@ INSERT_BOOKING_RESULT = "INSERT INTO booking_result  " \
                             "(booking_id, carrier_booking_number,confirm_datetime, " \
                             "voyage_name, voyage_no, receipt_country, receipt_port, " \
                             "start_date, delivery_country, delivery_port, delivery_date, " \
-                            "exchange_ref) " \
+                            "message_code) " \
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 INSERT_ROUTE_TIMETABLE = "INSERT INTO route_timetable " \

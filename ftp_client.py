@@ -159,30 +159,44 @@ class PyFTPclient:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename=FTP_LOG_FILENAME, format='%(asctime)s %(levelname)s: %(message)s',
+    logging.basicConfig(filename=LGG_FTP_CLIENT, format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG)
     obj = PyFTPclient(FTP_HOST, port=FTP_PORT, login=FTP_USERNAME, passwd=FTP_PASSWORD)
+    print("System restart ....")
+    logging.info("============================ FTP Client System restart ============================\n")
     while True:
         ftp_connect = ftplib.FTP()
         ftp_connect.set_debuglevel(2)
         ftp_connect.set_pasv(True)
 
         obj.connect(ftp_connect, REMOTE_FPT_PATH)
-
         all_files_name = ftp_connect.nlst()  # 获取远程FTP的所有文件名
+        try:
+            for file_name in all_files_name:
+                if not file_name.startswith(FILTER_FILE_HEADER):   # 如果是本公司的上传的文件，则不必要去下载
+                    start_time = time.time()
+                    logging.info("Downloading file:" + file_name)
+                    if obj.DownloadFile(file_name, None, REMOTE_FPT_PATH):
+                        info_status = "Success"
+                        # 将本地文件名更名
+                        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
+                        source_filename = os.path.join(local_path, file_name)   # 源文件名
+                        dst_filename = os.path.join(local_path, FILE_HEADER+file_name)  # 更改后的目标文件名
+                        os.rename(source_filename, dst_filename)
+                        # 下载成功后，删除远程的文件
+                        ftp_connect.delete(file_name)  # 删除远程FTP文件
+                    else:
+                        info_status = "Failure"
 
-        for file_name in all_files_name:
-            start_time = time.time()
-            logging.info("Downloading file:" + file_name)
-            if obj.DownloadFile(file_name, None, REMOTE_FPT_PATH):
-                info_status = "Success"
-                # 下载成功后，删除远程的文件
-                # ftp_connect.delete(file_name)  # 删除远程FTP文件
-            else:
-                info_status = "Failure"
+                    spend_time = time.time() - start_time
+                    logging.info(info_status + " download file: " + file_name +
+                                 "... {:3.6f}".format(spend_time) + "s. \n")
 
-            spend_time = time.time() - start_time
-            logging.info(info_status + " download file: " + file_name + "... {:3.6f}".format(spend_time) + "s. ")
+            ftp_connect.close()
+            time.sleep(FTP_SLEEP_TIME)
+        except:
+            logging.info("ERROR: __main__")
+            time.sleep(600)
 
-        ftp_connect.close()
-        time.sleep(FTP_SLEEP_TIME)
+
+

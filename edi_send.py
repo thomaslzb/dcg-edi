@@ -17,7 +17,7 @@ from db_utils import *
 from sql_const import BOOKING_SQL
 from const import *
 from ftp_tools import create_ftp_connect, uploading_file, get_file_list
-from evengreen_files import *
+from encode_file import *
 
 
 def get_booking_data(current_row):
@@ -98,11 +98,11 @@ def check_data(booking_data, all_detail_row):
     return error_msg
 
 
-def ftp_file(ftp_files_list):
+def ftp_upload_file(ftp_files_list):
     start_time = time.time()
     ftp = create_ftp_connect(FTP_HOST, FTP_PORT, FTP_USERNAME, FTP_PASSWORD)
     if ftp:
-        ftp.cwd(REMOTE_DIRECTORY)  # 转换至需要上传的目录
+        ftp.cwd(REMOTE_FPT_PATH)  # 转换至需要上传的目录
         if PROGRAM_DEBUG:
             spend_time = time.time() - start_time
             print(" ** Step5: 连接远程的FTP服务器 " + "{:3.6f}".format(spend_time) + "s. ")
@@ -127,12 +127,15 @@ def ftp_file(ftp_files_list):
                         spend_time = time.time() - start_time
                         print(" ** Step7: 将文件 " + filename + "移至到备份目录中...." + "{:3.6f}".format(spend_time) + "s. ")
                 except:
+                    logging.exception("Backup File Error...")
                     if PROGRAM_DEBUG:
                         spend_time = time.time() - start_time
+                        logging.exception()
                         print(filename + " ** Step7: 将文件移至到备份目录失败...." + "{:3.6f}".format(spend_time) + "s. ")
         # 关闭FTP连接
         ftp.close()
     else:
+        logging.info("Connect FTP Failure.....")
         if PROGRAM_DEBUG:
             spend_time = time.time() - start_time
             print(" ** Step5: 连接远程的FTP服务器...失败 " + "{:3.6f}".format(spend_time) + "s. ")
@@ -164,8 +167,9 @@ def make_edi_file(connect_db, booking_data, all_booking_detail_row):
 
         # 保存文件
         start_time = time.time()
-        filename = booking_data["booking_id"] + ".txt"
+        filename = FILTER_FILE_HEADER + booking_data["booking_id"] + ".txt"
         save_to_file(filename, content_list)
+        logging.info("Save file to " + filename)
         if PROGRAM_DEBUG:
             spend_time = time.time() - start_time
             print(" ** Step3: 生成新的报文文件 " + "{:3.6f}".format(spend_time) + "s. ")
@@ -180,6 +184,7 @@ def make_edi_file(connect_db, booking_data, all_booking_detail_row):
     start_time = time.time()
     data = [status, str_error, booking_data["booking_id"]]
     update_sql(connect_db, UPDATE_BOOKING_STATUS_SQL, data)
+    logging.info("Updating data status")
     if PROGRAM_DEBUG:
         spend_time = time.time() - start_time
         print(" ** Step4: 更新数据 " + "{:3.6f}".format(spend_time) + "s. ")
@@ -223,7 +228,8 @@ def main_progress(connect_db):
     if get_row:
         # 取到所有未处理的订舱主数据
         booking_data = get_booking_data(get_row)
-
+        logging.info("Begin handle booking id is " + booking_data['booking_id'])
+        start_time = time.time()
         # 取到所有未处理的订舱明细数据
         booking_detail_cursor = select_sql_data(connect_db, BOOKING_DETAIL_SQL, [booking_data['booking_id'], ])
 
@@ -231,6 +237,9 @@ def main_progress(connect_db):
         if all_booking_detail_row:    # 如何没有订单明细，则不做任何处理
             make_edi_file(connect_db, booking_data, all_booking_detail_row)
 
+        spend_time = time.time() - start_time
+        logging.info("Finished handle booking id is " + booking_data['booking_id'] +
+                     ", taken time is {:3.6f}".format(spend_time) + "s. \n")
         booking_detail_cursor.close()
 
     booking_cursor.close()
@@ -240,6 +249,10 @@ def main_progress(connect_db):
 
 # main progress
 if __name__ == "__main__":
+    logging.basicConfig(filename=LGG_EDI_SEND, format='%(asctime)s %(levelname)s: %(message)s',
+                        level=logging.DEBUG)
+    print("EDI Send Monitor System restart ....")
+    logging.info("========================= EDI Send Monitor System restart ========================")
     while True:
         try:
             db_connect = connect_remote_db()
@@ -253,10 +266,11 @@ if __name__ == "__main__":
             files_list = get_file_list(local_path, files_list)
             if files_list:
                 # 上传到FTP服务器
-                ftp_file(files_list)
+                ftp_upload_file(files_list)
 
             print("EDI SEND System Sleeping ...\n")
             time.sleep(EDI_SEND_SLEEP_TIME)
         except:
+            logging.exception("Error !!!")
             time.sleep(60)
 

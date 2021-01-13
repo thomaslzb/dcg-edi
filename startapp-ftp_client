@@ -1,0 +1,5 @@
+source venv/bin/activate
+
+nohup python -u ftp_client.py >/dev/null 2>&1 &
+
+

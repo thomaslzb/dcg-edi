@@ -1,200 +1,232 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-解码文件
-@File    :   encode_file.py    
+台湾长荣EDI的报文编写
+@File    :   evengreen_files.py
 @Contact :   thomaslzb@hotmail.com
 @License :   (C)Copyright 2020-2022, Zibin Li
-
+写EDI的文件
 @Modify Time      @Author    @Version    @Desciption
 ------------      -------    --------    -----------
-04/12/2020 13:19   lzb       1.0         None
+27/11/2020 09:33   lzb       1.0         None
 """
+import os
 import datetime
-from const import FILTER_LOADING_PORT, FILTER_DELIVERY_PORT, FILTER_LOADING_COUNTRY
-import re
+from db_utils import *
+from sql_const import *
 
 
-def is_valid_file(file, file_type):
+def get_country_name(connect_db, country_code):
     """
-    判断文件是否是合法的文件
-    :param file:
-    :param file_type:
+    返回国家名称
+    :param connect_db: 数据库连接
+    :param country_code: 国家代码 2 位
+    :return: name 国家名称
+    """
+    name = ""
+    data = [country_code, ]
+    booking_cursor = select_sql_data(connect_db, SELECT_COUNTRY_SQL, data)  # 取到数据
+    get_row = booking_cursor.fetchone()
+    if get_row:
+        name = get_row[0].strip()
+    return name
+
+
+def get_country_port_name(connect_db, country_code, port_code):
+    """
+    返回国家名称
+    :param connect_db: 数据库连接
+    :param country_code: 国家代码 2 位
+    :param port_code: 港口代码 3 位
+    :return: port_name
+    """
+    port_name = ""
+    data = [country_code, port_code]
+    booking_cursor = select_sql_data(connect_db, SELECT_COUNTRY_PORT_SQL, data)  # 取到数据
+    get_row = booking_cursor.fetchone()
+    if get_row:
+        port_name = get_row[0].strip()
+    return port_name
+
+
+def encoding_edi_file(data, connect_db):
+    """
+    将数据，写入到EDI FILE 中
+    :param data: EDI FILE 的数据
+    :param connect_db: 数据库连接
     :return:
     """
-    with open(file, 'r') as file:
-        data = file.readlines()
-    for line_data in data:
-        if line_data.find(file_type) != -1:
-            return True
-    return False
 
+    content_list = []
+    # 文件头： 时间+预定单号
+    # UNB+UNOA:3+DCG+EGLV:ZZZ+201123:1409+DCG2001'
+    op_date = datetime.datetime.now().strftime("%y%m%d")
+    op_time = datetime.datetime.now().strftime("%H%M")
+    content_list.append("UNB+UNOA:3+DCG:AA+EVERGREEN:ZZ+" + op_date + ":" + op_time + "+" + data["booking_id"])
 
-def string_to_date(date_str):
-    try:
-        date_str = date_str[date_str.find(":") + 1:][0:date_str[date_str.find(":") + 1:].find(":")]
-        if len(date_str) == 14:
-            date_str = datetime.datetime.strptime(date_str, "%Y%m%d%H%M%S")
-        elif len(date_str) == 12:
-            date_str = datetime.datetime.strptime(date_str, "%Y%m%d%H%M")
-        elif len(date_str) == 8:
-            date_str = datetime.datetime.strptime(date_str, "%Y%m%d")
-    except:
-        date_str = ""
-    return date_str
+    # UNH+DCG2001+IFTMBF:D:99B:UN:2.0'
+    content_list.append("UNH+" + data["booking_id"] + "+IFTMBF:D:99B:UN:2.0")
 
+    # BGM+335+dcgtestbooking001+9'
+    content_list.append("BGM+335+" + data["booking_id"] + "+9")
 
-def get_one_line(content, start_string):
-    end_string = "'"
-    index = content.find(start_string)
-    substring = content[index:]
-    string = substring[0:substring.find(end_string)]
-    return string
+    # CTA+IC+:MARK'
+    content_list.append("CTA+IC+:" + data["contact"])
 
+    # COM+?+00861581388333:TE'
+    content_list.append("COM+?+" + data["telephone"] + ":TE")
 
-def get_element(line_content, position, sign):
-    """
-    从某行中取到特定的值
-    :param line_content: 整行的内容
-    :param position: 需要取值的位置
-    :return: 获取的值
-    """
-    line = line_content
+    # COM+mark@dcglogistics.com:EM'
+    content_list.append("COM+" + data["email"] + ":EM")
+
+    # DTM+137:20201123:102'
+    op_datetime = datetime.datetime.now().strftime("%Y%m%d")
+    content_list.append("DTM+137:" + op_datetime + ":102")
+
+    # TSR+30+2' ---- Transport Service Requirements
+    content_list.append("TSR+" + data["transport_service_mode"] + "+2")
+
+    # FTX+AAI+++TEST ONLY'
+
+    # RFF+SI:DCG2020112301'
+    content_list.append("RFF+SI:" + data["booking_id"])
+
+    # RFF+CT:CND005244'
+    content_list.append("RFF+CT:" + data["contract_no"])
+
+    # LOC+88+TWKHH:181:6:Kaohsiung+TW:162:5:Taiwan'
+    country_name = get_country_name(connect_db, data["receipt_country"])
+    port_name = get_country_port_name(connect_db, data["receipt_country"], data["receipt_port"])
+    content_list.append("LOC+88+" + data["receipt_country"] + data["receipt_port"] + ":181:6:"
+                        + port_name + "+" + data["receipt_country"] + ":162:5:" + country_name)
+
+    # DTM+196:20201210:102'
+    content_list.append("DTM+196:" + data["scheduled_date"] + ":102")
+
+    # LOC+7+GBFXT:181:6:Felixstowe'
+    content_list.append("LOC+7+" + data["delivery_country"] + data["delivery_port"] + ":181:6:"
+                        + data["delivery_port_name"])
+
+    # LOC+9+TWKHH:139:6:Kaohsiung+TW:162:5:Taiwan'
+    content_list.append("LOC+9+" + data["receipt_country"] + data["receipt_port"] + ":139:6:"
+                        + port_name + "+" + data["receipt_country"] + ":162:5:" + country_name)
+
+    # LOC+11+GBFXT:139:6:Felixstowe+GB:162:5:United Kingdom'
+    content_list.append("LOC+11+" + data["delivery_country"] + data["delivery_port"] + ":139:6:"
+                        + data["delivery_port_name"] + "+" + data["delivery_country"] + ":162:5:"
+                        + data["delivery_country_name"])
+
+    # NAD+ZZZ+++DCG LOGISTICS LTD+7 Floor North Tower+Hubei Building Binhe road+ShenZhen+CN'
+    content_list.append("NAD+ZZZ+++" + data["business_name"] + "+" + data["address1"] + "+ "
+                        + data["address2"] + "+" + data["town"] + "+" + data["postcode"] + "+" + data["country"])
+
+    # CTA+IC+:THOMAS LI'
+    content_list.append("CTA+IC+:" + data["contact"])
+
+    # NAD+CZ+++BOWER GREEN LIMITED '
+    content_list.append("NAD+CZ+++BOWER GREEN LIMITED")
+
+    # NAD+CN+++DCG LOGISTICS LTD+7 Floor North Tower+Hubei Building Binhe road+ShenZhen+CN'
+    content_list.append("NAD+CN+++" + data["business_name"] + "+" + data["address1"] + "+ "
+                        + data["address2"] + "+" + data["town"] + "+" + data["postcode"] + "+" + data["country"])
+
+    # NAD+NI+++DCG LOGISTICS LTD+7 Floor North Tower+Hubei Building Binhe road+ShenZhen+CN'
+    content_list.append("NAD+NI+++" + data["business_name"] + "+" + data["address1"] + "+ "
+                        + data["address2"] + "+" + data["town"] + "+" + data["postcode"] + "+" + data["country"])
+
+    # CTA+IC+:THOMAS'
+    content_list.append("CTA+IC+:" + data["contact"])
+
+    # COM+?+004407421900978:TE'
+    content_list.append("COM+?+" + data["telephone"] + ":TE")
+
+    # COM+mark@dcglogistics.com:EM'
+    content_list.append("COM+" + data["email"] + ":EM")
+
+    # NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD'
+    content_list.append("NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD")
+
+    # NAD+FW+++DCG LOGISTICS LTD+7 Floor North Tower+Hubei Building Binhe road+ShenZhen+CN'
+    content_list.append("NAD+FW+++" + data["business_name"] + "+" + data["address1"] + "+ "
+                        + data["address2"] + "+" + data["town"] + "+" + data["postcode"] + "+" + data["country"])
+
+    # CTA+IC+:THOMAS LI'
+    content_list.append("CTA+IC+:" + data["contact"])
+
+    # COM+?+00861581388333:TE'
+    content_list.append("COM+?+" + data["telephone"] + ":TE")
+
+    # COM+mark@dcglogistics.com:EM'
+    content_list.append("COM+" + data["email"] + ":EM")
     i = 0
-    while sign in line:
-        index = line.find(sign) + 1
-        line = line[index:]
+    for detail_data in data['GID']:
         i = i + 1
-        if i == position:
-            break
-    if line.find(sign) < 0:
-        element = line
-    else:
-        element = line[0:line.find(sign)]
-    return element
+        # GID+1+916:5L:67:6:Textile Bags'
+        content_list.append("GID+" + str(detail_data["quantity"]))
 
+        # FTX+AAA+++LINEN FABRIC CHAIR'
+        content_list.append("FTX+AAA+++" + detail_data["product_description"])
 
-def encode_IFTMBC_file(file):
-    """
-    解码文件到一个list中
-    :param db_connect:
-    :param file:
-    :return:data_list
-    """
-    with open(file, 'r') as file:
-        data = file.readlines()
-    content = data[0]
-    exchange_ref = get_element(get_one_line(content, "UNB"), 5, "+")
-
-    carrier_booking_number = get_element(get_one_line(content, "RFF+BN:"), 1, "+")
-    carrier_booking_number = carrier_booking_number[carrier_booking_number.find(":") + 1:]
-
-    booking_id = get_element(get_one_line(content, "BGM+770"), 2, "+")
-
-    confirm_datetime = get_element(get_one_line(content, "DTM+134:"), 1, "+")
-    confirm_datetime = string_to_date(confirm_datetime)
-
-    voyage_no = get_element(get_one_line(content, "TDT+20"), 2, "+")
-
-    voyage_name = get_element(get_one_line(content, "TDT+20"), 8, "+")
-
-    receipt_country = get_element(get_one_line(content, "LOC+9"), 2, "+")
-    receipt_country = receipt_country[0:2]
-
-    receipt_port = get_element(get_one_line(content, "LOC+9"), 2, "+")
-    receipt_port = receipt_port[2:5]
-
-    start_date = get_element(get_one_line(content, "DTM+133:"), 1, "+")
-    start_date = string_to_date(start_date)
-
-    delivery_country = get_element(get_one_line(content, "LOC+11"), 2, "+")
-    delivery_country = delivery_country[0:2]
-
-    delivery_port = get_element(get_one_line(content, "LOC+11"), 2, "+")
-    delivery_port = delivery_port[2:5]
-
-    delivery_date = get_element(get_one_line(content, "DTM+132:"), 1, "+")
-    delivery_date = string_to_date(delivery_date)
-
-    data_list = [booking_id, carrier_booking_number, confirm_datetime,
-                 voyage_name, voyage_no,
-                 receipt_country, receipt_port, start_date,
-                 delivery_country, delivery_port, delivery_date,
-                 exchange_ref]
-
-    return data_list
-
-
-def encode_IFTSAI_file(file):
-    data_list = []
-
-    # 取到文件的所有字符串
-    with open(file, 'r') as file:
-        all_data_list = file.readlines()
-
-    carrier_company = get_element(get_one_line(all_data_list[0], "UNOA:1"), 1, "+")
-
-    all_data_list = all_data_list[0].split("'", -1)
-    # 将数据分组
-    group = []
-    each_record = []
-    begin_go = False
-    new_group = False
-    for line_data in all_data_list:
-        if line_data.find("UNH") != -1:  # 查询到，就开始计数
-            each_record = []
-            new_group = True
-            begin_go = True
-
-        if line_data.find("UNT") != -1:  # 查询到，就开始计数
-            new_group = False
-
-        if new_group and begin_go:
-            each_record.append(line_data)
+        # MEA+AAE+G+KGM:5540'
+        if detail_data["weight_disc"] == 1:
+            if detail_data["quantity"] <= 0:
+                weight = detail_data["weight"] * 1
+            else:
+                weight = detail_data["weight"] * detail_data["quantity"]
         else:
-            if begin_go:
-                group.append(each_record)
+            weight = detail_data["weight"]
 
-    # 将提取数据存入list中
-    data_record = []
-    for each_record in group:
-        code = " ".join(each_record)
+        content_list.append("MEA+AAE+G+" + detail_data["weight_unit"] + ":" + str(weight).strip())
 
-        message_code = get_element(get_one_line(code, "UNH"), 1, "+")
-        message_date = get_element(get_one_line(code, "DTM+137"), 1, "+")
-        message_date = string_to_date(message_date)
+        if detail_data["volume"] > 0:
+            # MEA+AAE+AAW+MTQ:68'
+            content_list.append("MEA+AAE+AAW+" + detail_data["volume_unit"] + ":" + str(detail_data["volume"]))
 
-        voyage_name = get_element(get_one_line(code, "TDT"), 8, "+")
-        voyage_name = get_element(voyage_name, 3, ":")
+        # SGP+01+916'
+        content_list.append("SGP+" + "{:0>2d}".format(i) + "+" + str(detail_data["quantity"]))
 
-        route_name = get_element(get_one_line(code, "FTX"), 4, "+")
+        # if len(detail_data["remark"]) > 0:
+        #     # FTX+AAI+++TEST ONLY'
+        #     content_list.append("FTX+AAI+++" + detail_data["remark"])
 
-        voyage_no = get_element(get_one_line(code, "TDT"), 2, "+")
+    # END FOR
+    i = 0
+    for detail_data in data['GID']:
+        i = i + 1
+        # EQD+CN+01:230:ZZZ+4500:102:5+2+5'
+        content_list.append("EQD+CN+" + "{:0>2d}".format(i) + ":230:ZZZ+" + detail_data["container_code"]
+                            + ":102:5+2+5")
 
-        place_of_receipt = get_element(get_one_line(code, "LOC+88"), 2, "+")[0:5]
-        place_of_receipt_date = get_element(get_one_line(code, "DTM+180"), 1, "+")
-        place_of_receipt_date = string_to_date(place_of_receipt_date)
+        # EQN+1:2'
+        content_list.append("EQN+" + str(detail_data["container_qty"]) + ":2")
+    # END FOR
 
-        place_of_loading = get_element(get_one_line(code, "LOC+9"), 2, "+")[0:5]
-        place_of_loading_date = get_element(get_one_line(code, "DTM+133"), 1, "+")
-        place_of_loading_date = string_to_date(place_of_loading_date)
+    # TMD+3'
+    content_list.append("TMD+" + data["transport_service_type"])
 
-        place_of_discharge = get_element(get_one_line(code, "LOC+11"), 2, "+")[0:5]
-        place_of_discharge_date = get_element(get_one_line(code, "DTM+132"), 1, "+")
-        place_of_discharge_date = string_to_date(place_of_discharge_date)
+    # UNT+37+DCG2001'
+    line = str(len(content_list)).strip()
+    content_list.append("UNT+" + line + "+" + data["booking_id"])
 
-        place_of_delivery = get_element(get_one_line(code, "LOC+7"), 2, "+")[0:5]
-        place_of_delivery_date = get_element(get_one_line(code, "DTM+17"), 1, "+")
-        place_of_delivery_date = string_to_date(place_of_delivery_date)
+    # UNZ+1+DCG2001'
+    content_list.append("UNZ+1+" + data["booking_id"])
 
-        if (place_of_loading in FILTER_LOADING_PORT or place_of_loading[:2] in FILTER_LOADING_COUNTRY) \
-                and place_of_delivery in FILTER_DELIVERY_PORT:
-            data_record.append((message_code, message_date, route_name,
-                                voyage_name, voyage_no,
-                                place_of_delivery, place_of_delivery_date,
-                                place_of_receipt, place_of_receipt_date,
-                                place_of_loading, place_of_loading_date,
-                                place_of_discharge, place_of_discharge_date,
-                                carrier_company,
-                                ))
-    return data_record
+    return content_list
+
+
+def save_to_file(filename, content_list):
+    # 写之前，先检验文件是否存在，存在就删掉
+    ftp_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)
+    filename = os.path.join(ftp_path, filename)
+
+    if os.path.exists(filename):
+        os.remove(filename)
+
+    # 以写的方式打开文件，如果文件不存在，就会自动创建
+    with open(filename, 'w', encoding='utf-8') as f:
+        for each_line in content_list:
+            f.writelines(each_line + "'")
+            f.write('\n')
+    print("Finished file:" + filename)
+
+    return

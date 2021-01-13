@@ -41,13 +41,13 @@ https://www.cnblogs.com/xiao-apple36/p/9675185.html
 
 # FTP操作
 import ftplib
+import logging
 import os
 import socket
 import time
 import shutil
 
 from const import *
-from concurrent.futures import ThreadPoolExecutor
 
 
 def create_ftp_connect(host, port, username, password):
@@ -68,9 +68,11 @@ def create_ftp_connect(host, port, username, password):
         ftp_connect.af = socket.AF_INET6  # IMPORTANT: force ftplib to use EPSV by setting
         print(ftp_connect.getwelcome())  # 打印欢迎信息
     except(socket.error, socket.gaierror):  # ftp 连接错误
+        logging.exception("ERROR!")
         print("ERROR: cannot connect [{}:{}]".format(host, port))
         return None
     except ftplib.error_perm:  # 用户登录认证错误
+        logging.info("ERROR: user Authentication failed ")
         print("ERROR: user Authentication failed ")
         return None
     return ftp_connect
@@ -86,30 +88,6 @@ def is_ftp_file(ftp_conn, ftp_path):
         return False
 
 
-def begin_download_file(ftp_connect, remote_name, local_name):
-    """
-     下载文件
-    :param ftp_connect:
-    :param remote_name:
-    :param local_name:
-    :return:
-    """
-    is_download = False
-    bufsize = 1024  # 设置缓冲块大小
-    fp = open(local_name, 'wb')  # 以写模式在本地打开文件
-
-    res = ftp_connect.retrbinary(
-        'RETR ' + remote_name,
-        fp.write,
-        bufsize)  # 接收服务器上文件并写入本地文件
-    if res.find('226') != -1:
-        is_download = True
-        # print('download file complete', local_name)
-    ftp_connect.set_debuglevel(0)  # 关闭调试
-    fp.close()  # 关闭文件
-    return is_download
-
-
 def uploading_file(ftp_connect, remote_name, upload_file):
     """
     上传文件
@@ -123,11 +101,14 @@ def uploading_file(ftp_connect, remote_name, upload_file):
         with open(upload_file, 'rb') as fp:
             res = ftp_connect.storlines("STOR " + remote_name, fp)
             if res.startswith('226 Transfer complete'):
+                logging.info("Upload File success.....")
                 print(upload_file+'.... Upload success.')
                 is_send = True
             else:
+                logging.info("Upload File failure....." + res)
                 print('Upload failed')
     except ftplib.all_errors as e:
+        logging.exception("FTP Error!" + e)
         print('FTP error:', e)
 
     return is_send
