@@ -101,7 +101,7 @@ def uploading_file(ftp_connect, remote_name, upload_file):
         with open(upload_file, 'rb') as fp:
             res = ftp_connect.storlines("STOR " + remote_name, fp)
             if res.startswith('226 Transfer complete'):
-                logging.info("Upload File success.....")
+                logging.info("Upload File success....."+upload_file)
                 print(upload_file+'.... Upload success.')
                 is_send = True
             else:

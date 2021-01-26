@@ -34,7 +34,8 @@ BOOKING_SQL = "SELECT  TOP 1 booking.booking_id, " \
              "shipper.address2, " \
              "shipper.town, " \
              "shipper.country, " \
-             "shipper.postcode " \
+             "shipper.postcode, " \
+             "carrier.env_id " \
              "FROM booking, carrier, country_port, country, shipper " \
              "WHERE booking.status = ? " \
              "AND booking.carrier_id = carrier.id " \
@@ -52,9 +53,11 @@ BOOKING_DETAIL_SQL = "SELECT booking_detail.product_description, " \
              "booking_detail.quantity,  " \
              "booking_detail.volume, " \
              "booking_detail.volume_unit, " \
-             "booking_detail.remark " \
-             "FROM booking_detail " \
-             "WHERE booking_detail.booking_id = ? "
+             "booking_detail.remark, " \
+             "container.ISO_1995 " \
+             "FROM booking_detail, container " \
+             "WHERE booking_detail.booking_id = ? " \
+             "AND booking_detail.container_code = container.ISO_1984"
 
 UPDATE_BOOKING_STATUS_SQL = "UPDATE booking " \
                     "SET booking.status = ?, error = ? "  \

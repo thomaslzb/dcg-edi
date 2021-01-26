@@ -62,7 +62,15 @@ def encoding_edi_file(data, connect_db):
     # UNB+UNOA:3+DCG+EGLV:ZZZ+201123:1409+DCG2001'
     op_date = datetime.datetime.now().strftime("%y%m%d")
     op_time = datetime.datetime.now().strftime("%H%M")
-    content_list.append("UNB+UNOA:3+DCG:AA+EVERGREEN:ZZ+" + op_date + ":" + op_time + "+" + data["booking_id"])
+
+    head_string = ""
+    if data["env_id"] == EVENGREEN:
+        head_string = DCG_EVENGREEN_EDI_ID + ":AA+EVERGREEN:ZZ"
+
+    if data["env_id"] == MAERSK:
+        head_string = DCG_MAERSK_EDI_ID + ":ZZ" + MAERSK
+
+    content_list.append("UNB+UNOA:3+" + head_string + op_date + ":" + op_time + "+" + data["booking_id"])
 
     # UNH+DCG2001+IFTMBF:D:99B:UN:2.0'
     content_list.append("UNH+" + data["booking_id"] + "+IFTMBF:D:99B:UN:2.0")
@@ -143,8 +151,9 @@ def encoding_edi_file(data, connect_db):
     # COM+mark@dcglogistics.com:EM'
     content_list.append("COM+" + data["email"] + ":EM")
 
-    # NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD'
-    content_list.append("NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD")
+    if data["env_id"] == EVENGREEN:
+        # NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD'
+        content_list.append("NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD")
 
     # NAD+FW+++DCG LOGISTICS LTD+7 Floor North Tower+Hubei Building Binhe road+ShenZhen+CN'
     content_list.append("NAD+FW+++" + data["business_name"] + "+" + data["address1"] + "+ "
@@ -193,9 +202,15 @@ def encoding_edi_file(data, connect_db):
     i = 0
     for detail_data in data['GID']:
         i = i + 1
-        # EQD+CN+01:230:ZZZ+4500:102:5+2+5'
-        content_list.append("EQD+CN+" + "{:0>2d}".format(i) + ":230:ZZZ+" + detail_data["container_code"]
-                            + ":102:5+2+5")
+        if data["env_id"] == EVENGREEN:
+            # EQD+CN+01:230:ZZZ+4500:102:5+2+5'
+            content_list.append("EQD+CN+" + "{:0>2d}".format(i) + ":230:ZZZ+" + detail_data["container_code"]
+                                + ":102:5+2+5")
+
+        if data["env_id"] == MAERSK:
+            # EQD+CN+01:230:ZZZ+4500:102:5+2+5'
+            content_list.append("EQD+CN+" + "{:0>2d}".format(i) + ":230:ZZZ+" + detail_data["container_code_1995"]
+                                + ":102:5+2+5")
 
         # EQN+1:2'
         content_list.append("EQN+" + str(detail_data["container_qty"]) + ":2")

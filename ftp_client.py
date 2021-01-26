@@ -72,7 +72,7 @@ class PyFTPclient:
         ftp.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 75)
         ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
-        ftp.cwd(dst_path)  # 转换至需要的FTP目标目录
+        # ftp.cwd(dst_path)  # 转换至需要的FTP目标目录
 
     def isHaveFtpPath(self, ftp, dst_ftp_path=None):
         if dst_ftp_path is None:
@@ -161,19 +161,29 @@ class PyFTPclient:
 if __name__ == "__main__":
     logging.basicConfig(filename=LGG_FTP_CLIENT, format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG)
-    obj = PyFTPclient(FTP_HOST, port=FTP_PORT, login=FTP_USERNAME, passwd=FTP_PASSWORD)
     print("System restart ....")
     logging.info("============================ FTP Client System restart ============================\n")
+    switch_company = 1
     while True:
         ftp_connect = ftplib.FTP()
         ftp_connect.set_debuglevel(2)
         ftp_connect.set_pasv(True)
+        if switch_company == 1:
+            switch_company = 2
+            username = EVENGREEN_FTP_USERNAME
+            password = EVENGREEN_FTP_PASSWORD
+        else:
+            switch_company = 1
+            username = MAERSK_FTP_USERNAME
+            password = MAERSK_FTP_PASSWORD
 
+        obj = PyFTPclient(FTP_HOST, port=FTP_PORT, login=username, passwd=password)
         obj.connect(ftp_connect, REMOTE_FPT_PATH)
         all_files_name = ftp_connect.nlst()  # 获取远程FTP的所有文件名
         try:
             for file_name in all_files_name:
-                if not file_name.startswith(FILTER_FILE_HEADER):   # 如果是本公司的上传的文件，则不必要去下载
+                # 如果是本公司的上传的文件，则不必要去下载
+                if not file_name.startswith(DCG_EVENGREEN_EDI_ID) or not file_name.startswith(DCG_MAERSK_EDI_ID):
                     start_time = time.time()
                     logging.info("Downloading file:" + file_name)
                     if obj.DownloadFile(file_name, None, REMOTE_FPT_PATH):
@@ -193,7 +203,7 @@ if __name__ == "__main__":
                                  "... {:3.6f}".format(spend_time) + "s. \n")
 
             ftp_connect.close()
-            time.sleep(FTP_SLEEP_TIME)
+            time.sleep(FTP_CLIENT_SLEEP_TIME)
         except:
             logging.info("ERROR: __main__")
             time.sleep(600)

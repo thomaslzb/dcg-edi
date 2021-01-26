@@ -12,7 +12,6 @@
 """
 import datetime
 from const import FILTER_LOADING_PORT, FILTER_DELIVERY_PORT, FILTER_LOADING_COUNTRY
-import re
 
 
 def is_valid_file(file, file_type):
@@ -57,6 +56,7 @@ def get_element(line_content, position, sign):
     从某行中取到特定的值
     :param line_content: 整行的内容
     :param position: 需要取值的位置
+    :param sign: 分隔符
     :return: 获取的值
     """
     line = line_content

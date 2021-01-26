@@ -1,1 +1,7 @@
 2021-01-11 15:45:17,759 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-18 11:22:06,550 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-18 11:22:09,730 INFO: Begin handle booking id is DCG202101180001
+2021-01-18 11:22:10,924 INFO: Save file to DCGINTL.MCPU.IFTMBF.DCG202101180001.edi
+2021-01-18 11:22:11,627 INFO: Updating data status
+2021-01-18 11:22:11,628 INFO: Finished handle booking id is DCG202101180001, taken time is 1.896191s. 
+

@@ -21,11 +21,10 @@ from decode_file import is_valid_file, encode_IFTMBC_file, encode_IFTSAI_file
 from sql_const import *
 
 
-def IFTMBC_file(local_file, file):
+def IFTMBC_file(local_file):
     """
     处理IFTMBC 订舱确认报文, 并更新到数据库中
     :param local_file: 下载到本地目录的文件
-    :param file: 具体的文件名称
     :return:
     """
 
@@ -42,11 +41,10 @@ def IFTMBC_file(local_file, file):
         logging.info(" ***** No data have been found.")
 
 
-def IFTSAI_file(local_file, file):
+def IFTSAI_file(local_file):
     """
     处理IFTSAI 运输计划及实施信息报文
     :param local_file: 下载到本地目录的文件
-    :param file: 具体的文件名称
     :return:
     """
     # 备份目录
@@ -123,11 +121,11 @@ def parser_file():
 
             if is_valid_file(local_file, "IFTMBC"):
                 # IFTMBC 订舱确认报文
-                IFTMBC_file(local_file, file)
+                IFTMBC_file(local_file)
 
             if is_valid_file(local_file, "IFTSAI"):
                 # IFTSAI 运输计划及实施信息报文
-                IFTSAI_file(local_file, file)
+                IFTSAI_file(local_file)
             # end if
             spend_time = time.time() - start_time
             logging.info("Finished parse the file " + file + " Taken {:3.6f}".format(spend_time) + "s. \n")

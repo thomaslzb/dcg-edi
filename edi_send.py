@@ -46,6 +46,7 @@ def get_booking_data(current_row):
         'town': current_row[21].strip(),
         'country': current_row[22],
         'postcode': current_row[23].strip(),
+        'env_id': current_row[24].strip(),
     }
     return booking_data
 
@@ -62,6 +63,7 @@ def get_booking_detail_data(current_row):
         'volume': current_row[7],
         'volume_unit': current_row[8].strip(),
         'remark': current_row[9].strip(),
+        'container_code_1995': current_row[10].strip(),
     }
     return booking_detail_data
 
@@ -98,21 +100,49 @@ def check_data(booking_data, all_detail_row):
     return error_msg
 
 
+def get_edi_filename(company_id, booking_id):
+    """
+    根据不同公司的要求，产生不同的文件名
+    :param company_id: 公司的id
+    :param booking_id: booking_id 订单号码
+    :return: 文件名
+    """
+    filename = ""
+    if company_id == EVENGREEN:
+        filename = DCG_EVENGREEN_EDI_ID + booking_id + ".txt"
+
+    if company_id == MAERSK:
+        # < senderID >.< receiverID >.< message type >.< control  # >.<message #>.edi
+        MAERSK_NAME = MAERSK[0:MAERSK.find(":")]
+        filename = DCG_MAERSK_EDI_ID + "." + MAERSK_NAME + ".IFTMBF." + booking_id + ".edi"
+
+    return filename
+
+
 def ftp_upload_file(ftp_files_list):
     start_time = time.time()
-    ftp = create_ftp_connect(FTP_HOST, FTP_PORT, FTP_USERNAME, FTP_PASSWORD)
-    if ftp:
-        ftp.cwd(REMOTE_FPT_PATH)  # 转换至需要上传的目录
-        if PROGRAM_DEBUG:
-            spend_time = time.time() - start_time
-            print(" ** Step5: 连接远程的FTP服务器 " + "{:3.6f}".format(spend_time) + "s. ")
+    ftp_username = ""
+    ftp_password = ""
+    for file_name in ftp_files_list:
+        if file_name.startswith(DCG_EVENGREEN_EDI_ID):
+            ftp_username = EVENGREEN_FTP_USERNAME
+            ftp_password = EVENGREEN_FTP_PASSWORD
+        if file_name.startswith(DCG_MAERSK_EDI_ID):
+            ftp_username = MAERSK_FTP_USERNAME
+            ftp_password = MAERSK_FTP_PASSWORD
 
-        # 上传文件(上传整个目录的文件)
-        start_time = time.time()
-        for file in ftp_files_list:
-            (path, filename) = os.path.split(file)
+        ftp = create_ftp_connect(FTP_HOST, FTP_PORT, ftp_username, ftp_password)
+        if ftp:
+            ftp.cwd(REMOTE_FPT_PATH)  # 转换至需要上传的目录
+            if PROGRAM_DEBUG:
+                spend_time = time.time() - start_time
+                print(" ** Step5: 连接远程的FTP服务器 " + "{:3.6f}".format(spend_time) + "s. ")
+
+            # 上传文件
+            start_time = time.time()
+            (path, filename) = os.path.split(file_name)
             remote_file = filename
-            if uploading_file(ftp, remote_file, file):
+            if uploading_file(ftp, remote_file, file_name):
                 if PROGRAM_DEBUG:
                     spend_time = time.time() - start_time
                     print(" ** Step6: 成功上传文件 " + filename + "...." + "{:3.6f}".format(spend_time) + "s. ")
@@ -121,8 +151,8 @@ def ftp_upload_file(ftp_files_list):
                     # 上传成功后，将本地文件到备份目录中
                     start_time = time.time()
                     bak_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_BACKUP_DIR)
-                    shutil.copy(file, bak_path)
-                    os.remove(file)
+                    shutil.copy(file_name, bak_path)
+                    os.remove(file_name)
                     if PROGRAM_DEBUG:
                         spend_time = time.time() - start_time
                         print(" ** Step7: 将文件 " + filename + "移至到备份目录中...." + "{:3.6f}".format(spend_time) + "s. ")
@@ -132,13 +162,13 @@ def ftp_upload_file(ftp_files_list):
                         spend_time = time.time() - start_time
                         logging.exception()
                         print(filename + " ** Step7: 将文件移至到备份目录失败...." + "{:3.6f}".format(spend_time) + "s. ")
-        # 关闭FTP连接
-        ftp.close()
-    else:
-        logging.info("Connect FTP Failure.....")
-        if PROGRAM_DEBUG:
-            spend_time = time.time() - start_time
-            print(" ** Step5: 连接远程的FTP服务器...失败 " + "{:3.6f}".format(spend_time) + "s. ")
+            # 关闭FTP连接
+            ftp.close()
+        else:
+            logging.info("Connect FTP Failure.....")
+            if PROGRAM_DEBUG:
+                spend_time = time.time() - start_time
+                print(" ** Step5: 连接远程的FTP服务器...失败 " + "{:3.6f}".format(spend_time) + "s. ")
 
 
 def make_edi_file(connect_db, booking_data, all_booking_detail_row):
@@ -167,7 +197,9 @@ def make_edi_file(connect_db, booking_data, all_booking_detail_row):
 
         # 保存文件
         start_time = time.time()
-        filename = FILTER_FILE_HEADER + booking_data["booking_id"] + ".txt"
+        # 根据不同承运公司，定义不同的文件名
+        filename = get_edi_filename(booking_data["env_id"], booking_data["booking_id"])
+
         save_to_file(filename, content_list)
         logging.info("Save file to " + filename)
         if PROGRAM_DEBUG:
