@@ -5,3 +5,78 @@
 2021-01-18 11:22:11,627 INFO: Updating data status
 2021-01-18 11:22:11,628 INFO: Finished handle booking id is DCG202101180001, taken time is 1.896191s. 
 
+2021-01-27 11:36:54,995 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-27 11:37:00,151 INFO: ERROR: user Authentication failed 
+2021-01-27 11:37:00,154 INFO: Connect FTP Failure.....
+2021-01-27 11:38:51,327 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-27 11:38:53,968 INFO: Begin handle booking id is DCG202101180001
+2021-01-27 11:40:39,208 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-27 11:40:57,735 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 09:51:41,921 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 09:51:44,554 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 09:51:44,796 ERROR: Error !!!
+Traceback (most recent call last):
+  File "C:/DCG/GitHub/dcg-edi/edi_send.py", line 292, in <module>
+    main_progress(db_connect)
+  File "C:/DCG/GitHub/dcg-edi/edi_send.py", line 270, in main_progress
+    make_edi_file(connect_db, booking_data, all_booking_detail_row)
+  File "C:/DCG/GitHub/dcg-edi/edi_send.py", line 203, in make_edi_file
+    save_to_file(filename, content_list)
+  File "C:\DCG\GitHub\dcg-edi\encode_file.py", line 399, in save_to_file
+    os.remove(filename)
+PermissionError: [WinError 5] Access is denied: 'C:\\DCG\\GitHub\\dcg-edi\\sendfile-ftp\\'
+2021-01-29 09:53:09,180 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 09:53:30,808 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 09:54:05,966 ERROR: Error !!!
+Traceback (most recent call last):
+  File "C:/DCG/GitHub/dcg-edi/edi_send.py", line 292, in <module>
+    main_progress(db_connect)
+  File "C:/DCG/GitHub/dcg-edi/edi_send.py", line 270, in main_progress
+    make_edi_file(connect_db, booking_data, all_booking_detail_row)
+  File "C:/DCG/GitHub/dcg-edi/edi_send.py", line 203, in make_edi_file
+    save_to_file(filename, content_list)
+  File "C:\DCG\GitHub\dcg-edi\encode_file.py", line 399, in save_to_file
+    os.remove(filename)
+PermissionError: [WinError 5] Access is denied: 'C:\\DCG\\GitHub\\dcg-edi\\sendfile-ftp\\'
+2021-01-29 09:54:41,652 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 09:54:44,861 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 09:55:56,487 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 09:55:59,049 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 10:19:01,636 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 10:19:04,170 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 10:19:46,276 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 10:19:50,083 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 10:20:30,297 INFO: Save file to DCGINTL.MAEU.IFTMBF.DCG202101180001.edi
+2021-01-29 10:20:37,710 INFO: Updating data status
+2021-01-29 10:20:37,710 INFO: Finished handle booking id is DCG202101180001, taken time is 47.627204s. 
+
+2021-01-29 10:24:15,597 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 10:24:20,555 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 10:25:53,088 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 10:25:55,695 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 10:42:42,829 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 10:42:45,433 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 10:42:46,591 INFO: Save file to DCGINTL.MAEU.IFTMBF.DCG202101180001.edi
+2021-01-29 10:42:47,267 INFO: Updating data status
+2021-01-29 10:42:47,268 INFO: Finished handle booking id is DCG202101180001, taken time is 1.834222s. 
+
+2021-01-29 11:02:13,937 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 11:02:51,265 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 11:03:15,727 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 11:03:18,357 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 11:03:19,510 INFO: Save file to DCGINTL.MAEU.IFTMBF.DCG202101180001.edi
+2021-01-29 11:03:20,207 INFO: Updating data status
+2021-01-29 11:03:20,207 INFO: Finished handle booking id is DCG202101180001, taken time is 1.849444s. 
+
+2021-01-29 11:11:25,254 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 11:11:27,759 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 11:11:28,894 INFO: Save file to DCGINTL.MAEU.IFTMBF.DCG202101180001.edi
+2021-01-29 11:11:29,546 INFO: Updating data status
+2021-01-29 11:11:29,546 INFO: Finished handle booking id is DCG202101180001, taken time is 1.786350s. 
+
+2021-01-29 11:27:43,357 INFO: ========================= EDI Send Monitor System restart ========================
+2021-01-29 11:27:46,152 INFO: Begin handle booking id is DCG202101180001
+2021-01-29 11:27:47,283 INFO: Save file to DCGINTL.MAEU.IFTMBF.DCG202101180001.edi
+2021-01-29 11:27:49,146 INFO: Updating data status
+2021-01-29 11:27:49,146 INFO: Finished handle booking id is DCG202101180001, taken time is 2.993454s. 
+

@@ -51,12 +51,26 @@ def get_country_port_name(connect_db, country_code, port_code):
 
 def encoding_edi_file(data, connect_db):
     """
-    将数据，写入到EDI FILE 中
-    :param data: EDI FILE 的数据
-    :param connect_db: 数据库连接
+    分开公司开始编码
+    :param data:
+    :param connect_db:
     :return:
     """
+    content_list = []
+    if data["env_id"] == EVENGREEN:
+        content_list = encoding_EVENGREEN(data, connect_db)
+    if data["env_id"] == MAERSK:
+        content_list = encoding_MAERSK(data, connect_db)
+    return content_list
 
+
+def encoding_EVENGREEN(data, connect_db):
+    """
+    长荣公司编码，将数据，写入到EDI FILE 中
+    :param data: EDI FILE 的数据
+    :param connect_db: 数据库连接
+    :return: content_list
+    """
     content_list = []
     # 文件头： 时间+预定单号
     # UNB+UNOA:3+DCG+EGLV:ZZZ+201123:1409+DCG2001'
@@ -66,10 +80,6 @@ def encoding_edi_file(data, connect_db):
     head_string = ""
     if data["env_id"] == EVENGREEN:
         head_string = DCG_EVENGREEN_EDI_ID + ":AA+EVERGREEN:ZZ"
-
-    if data["env_id"] == MAERSK:
-        head_string = DCG_MAERSK_EDI_ID + ":ZZ" + MAERSK
-
     content_list.append("UNB+UNOA:3+" + head_string + op_date + ":" + op_time + "+" + data["booking_id"])
 
     # UNH+DCG2001+IFTMBF:D:99B:UN:2.0'
@@ -151,9 +161,8 @@ def encoding_edi_file(data, connect_db):
     # COM+mark@dcglogistics.com:EM'
     content_list.append("COM+" + data["email"] + ":EM")
 
-    if data["env_id"] == EVENGREEN:
-        # NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD'
-        content_list.append("NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD")
+    # NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD'
+    content_list.append("NAD+CA+EGLV:160:86+EVERGREEN MARINE CORP (M) SDN BHD")
 
     # NAD+FW+++DCG LOGISTICS LTD+7 Floor North Tower+Hubei Building Binhe road+ShenZhen+CN'
     content_list.append("NAD+FW+++" + data["business_name"] + "+" + data["address1"] + "+ "
@@ -202,15 +211,9 @@ def encoding_edi_file(data, connect_db):
     i = 0
     for detail_data in data['GID']:
         i = i + 1
-        if data["env_id"] == EVENGREEN:
-            # EQD+CN+01:230:ZZZ+4500:102:5+2+5'
-            content_list.append("EQD+CN+" + "{:0>2d}".format(i) + ":230:ZZZ+" + detail_data["container_code"]
-                                + ":102:5+2+5")
-
-        if data["env_id"] == MAERSK:
-            # EQD+CN+01:230:ZZZ+4500:102:5+2+5'
-            content_list.append("EQD+CN+" + "{:0>2d}".format(i) + ":230:ZZZ+" + detail_data["container_code_1995"]
-                                + ":102:5+2+5")
+        # EQD+CN+01:230:ZZZ+4500:102:5+2+5'
+        content_list.append("EQD+CN+" + "{:0>2d}".format(i) + ":230:ZZZ+" + detail_data["container_code"]
+                            + ":102:5+2+5")
 
         # EQN+1:2'
         content_list.append("EQN+" + str(detail_data["container_qty"]) + ":2")
@@ -218,6 +221,157 @@ def encoding_edi_file(data, connect_db):
 
     # TMD+3'
     content_list.append("TMD+" + data["transport_service_type"])
+
+    # UNT+37+DCG2001'
+    line = str(len(content_list)).strip()
+    content_list.append("UNT+" + line + "+" + data["booking_id"])
+
+    # UNZ+1+DCG2001'
+    content_list.append("UNZ+1+" + data["booking_id"])
+
+    return content_list
+
+
+def encoding_MAERSK(data, connect_db):
+    """
+    MAERSK 编码，将数据，写入到EDI FILE 中
+    :param data: EDI FILE 的数据
+    :param connect_db: 数据库连接
+    :return: content_list
+    """
+    content_list = []
+    # 文件头： 时间+预定单号
+    op_date = datetime.datetime.now().strftime("%y%m%d")
+    op_time = datetime.datetime.now().strftime("%H%M")
+
+    head_string = ""
+    head_string = DCG_MAERSK_EDI_ID + ":ZZZ+" + MAERSK
+
+    # UNB+UNOA:1+DCGINTL:ZZZ+MAEU:ZZZ+210126:1539+DCG210131341'
+    content_list.append("UNB+UNOA:1+" + head_string + "+" + op_date + ":" + op_time + "+" + data["booking_id"])
+
+    content_list.append("UNH+" + data["booking_id"] + "+IFTMBF:D:99B:UN")
+
+    # BGM+335+dcgtestbooking001+9'
+    content_list.append("BGM+335+" + data["booking_id"] + "+9")
+
+    # DTM+137:202011231530:203'
+    op_datetime = datetime.datetime.now().strftime("%Y%m%d%H%M")
+    content_list.append("DTM+137:" + op_datetime + ":203")
+
+    # TSR+30+2' ---- Transport Service Requirements
+    content_list.append("TSR+" + data["transport_service_mode"] + "+2")
+
+    # RFF+SI:DCG2020112301'
+    content_list.append("RFF+ZZ1:" + data["booking_id"])
+
+    # RFF+CT:CND005244'
+    content_list.append("RFF+CT:" + data["telephone"])
+
+    # TDT+20++1++MCC TRANSPORT:172'
+    content_list.append("TDT+20++1++MCC TRANSPORT:172")
+
+    # LOC+88+TWKHH:181:6:Kaohsiung'
+    country_name = get_country_name(connect_db, data["receipt_country"])
+    port_name = get_country_port_name(connect_db, data["receipt_country"], data["receipt_port"])
+    content_list.append("LOC+88+" + data["receipt_country"] + data["receipt_port"] + "::6:"
+                        + port_name)
+
+    # DTM+133:20201210:102'
+    content_list.append("DTM+133:" + data["scheduled_date"] + ":102")
+
+    # LOC+9+TWKHH::6:Kaohsiung'
+    content_list.append("LOC+9+" + data["receipt_country"] + data["receipt_port"] + ":6:"
+                        + port_name)
+
+    # LOC+11+GBFXT::6:Felixstowe+GB:162:5:United Kingdom'
+    content_list.append("LOC+11+" + data["delivery_country"] + data["delivery_port"] + "::6:"
+                        + data["delivery_port_name"])
+
+    # LOC+7+GBFXT::6:Felixstowe'
+    content_list.append("LOC+7+" + data["delivery_country"] + data["delivery_port"] + ":181:6:"
+                        + data["delivery_port_name"])
+
+    # NAD+CZ+++DCGINTL
+    content_list.append("NAD+CZ+++DCG INTL")
+
+    # NAD+CN+++TO ORDER'
+    # NAD+CN+++DCG LOGISTICS LTD+7 Floor North Tower+Hubei Building Binhe road+ShenZhen+CN'
+    content_list.append("NAD+CN+++" + data["business_name"] + "+" + data["address1"] + "+ "
+                        + data["address2"] + "+" + data["town"] + "+" + data["postcode"] + "+" + data["country"])
+
+    # NAD+NI+++TO ORDER'
+    # NAD+NI+++DCG LOGISTICS LTD+7 Floor North Tower+Hubei Building Binhe road+ShenZhen+CN'
+    content_list.append("NAD+NI+++" + data["business_name"] + "+" + data["address1"] + "+ "
+                        + data["address2"] + "+" + data["town"] + "+" + data["postcode"] + "+" + data["country"])
+
+    # NAD+CA+MCPU:160:86++MCC TRANSPORT'
+    content_list.append("NAD+CA+MCPU:160:86++MCC TRANSPORT")
+
+    # NAD+FC+40900315720:160:87++DCG INTL'
+    content_list.append("NAD+FC+40900315720:160:87++DCG INTL")
+
+    # NAD+BA+40900315720:160:87++DCG INTL'
+    content_list.append("NAD+BA+40900315720:160:87++DCG INTL")
+
+    # CTA+IC+:THOMAS'
+    content_list.append("CTA+IC+:" + data["contact"])
+
+    # COM+mark@dcglogistics.com:EM'
+    content_list.append("COM+" + data["email"] + ":EM")
+
+    i = 0
+    """
+    Email BY Wayland 
+    GID segment, it’s booking, multiple GID are not necessary, one GID is good enough If no special. 
+    GID details could be provided in SI
+    """
+    total_weight = ""
+    total_volume = ""
+    for detail_data in data['GID']:
+        i = i + 1
+        # GID+1+916:5L:67:6:Textile Bags'
+        content_list.append("GID+" + str(detail_data["quantity"]))
+
+        # FTX+AAA+++LINEN FABRIC CHAIR'
+        content_list.append("FTX+AAA+++" + detail_data["product_description"])
+
+        # MEA+AAE+G+KGM:5540'
+        if detail_data["weight_disc"] == 1:
+            if detail_data["quantity"] <= 0:
+                weight = detail_data["weight"] * 1
+            else:
+                weight = detail_data["weight"] * detail_data["quantity"]
+        else:
+            weight = detail_data["weight"]
+
+        total_weight = "MEA+AAE+WT+" + detail_data["weight_unit"] + ":" + str(weight).strip()
+        content_list.append("MEA+AAE+WT+" + detail_data["weight_unit"] + ":" + str(weight).strip())
+
+        if detail_data["volume"] > 0:
+            # MEA+AAE+AAW+MTQ:68'
+            content_list.append("MEA+AAE+AAW+" + detail_data["volume_unit"] + ":" + str(detail_data["volume"]))
+        else:
+            content_list.append("MEA+AAE+AAW+" + detail_data["volume_unit"] + ":0.000")
+        total_volume = "MEA+AAE+AAW+" + detail_data["volume_unit"] + ":" + str(detail_data["volume"])
+        break
+
+    # END FOR
+    i = 0
+    for detail_data in data['GID']:
+        i = i + 1
+        # EQD+CN+01:230:ZZZ+4500:102:5+2+5'
+        content_list.append("EQD+CN+" + "{:0>3d}".format(i) + ":230+" + detail_data["container_code_1995"])
+
+        # EQN+1:2'
+        content_list.append("EQN+" + str(detail_data["container_qty"]))
+        break
+    # END FOR
+    if total_weight != "":
+        content_list.append(total_weight)
+
+    if total_volume != "":
+        content_list.append(total_volume)
 
     # UNT+37+DCG2001'
     line = str(len(content_list)).strip()

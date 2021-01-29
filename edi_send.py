@@ -298,11 +298,13 @@ if __name__ == "__main__":
             files_list = get_file_list(local_path, files_list)
             if files_list:
                 # 上传到FTP服务器
-                ftp_upload_file(files_list)
+                # ftp_upload_file(files_list)
+                pass
 
             print("EDI SEND System Sleeping ...\n")
             time.sleep(EDI_SEND_SLEEP_TIME)
         except:
             logging.exception("Error !!!")
+            print("Error!!!")
             time.sleep(60)
 
