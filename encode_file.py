@@ -281,7 +281,7 @@ def encoding_MAERSK(data, connect_db):
     content_list.append("DTM+133:" + data["scheduled_date"] + ":102")
 
     # LOC+9+TWKHH::6:Kaohsiung'
-    content_list.append("LOC+9+" + data["receipt_country"] + data["receipt_port"] + ":6:"
+    content_list.append("LOC+9+" + data["receipt_country"] + data["receipt_port"] + "::6:"
                         + port_name)
 
     # LOC+11+GBFXT::6:Felixstowe+GB:162:5:United Kingdom'
