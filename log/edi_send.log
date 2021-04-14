@@ -80,3 +80,26 @@ PermissionError: [WinError 5] Access is denied: 'C:\\DCG\\GitHub\\dcg-edi\\sendf
 2021-01-29 11:27:49,146 INFO: Updating data status
 2021-01-29 11:27:49,146 INFO: Finished handle booking id is DCG202101180001, taken time is 2.993454s. 
 
+2021-04-12 11:12:01,472 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 11:50:14,825 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 11:53:07,705 INFO: Begin handle booking id is DCG201126
+2021-04-12 14:42:07,706 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 14:42:10,724 INFO: Begin handle booking id is DCG201126
+2021-04-12 14:43:54,752 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 14:43:58,837 INFO: Begin handle booking id is DCG201126
+2021-04-12 14:45:03,060 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 14:45:06,374 INFO: Begin handle booking id is DCG201126
+2021-04-12 14:45:52,788 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 14:45:56,060 INFO: Begin handle booking id is DCG201126
+2021-04-12 15:19:46,215 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 15:19:51,393 INFO: Begin handle booking id is DCG2101180001
+2021-04-12 15:21:01,437 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 15:21:07,605 INFO: Begin handle booking id is DCG2101180001
+2021-04-12 15:21:47,653 INFO: Save file to DCGINTL.MAERS.IFTMBF.DCG2101180001.edi
+2021-04-12 15:22:43,191 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 15:22:58,381 INFO: ========================= EDI Send Monitor System restart ========================
+2021-04-12 15:23:03,511 INFO: Begin handle booking id is DCG2101180001
+2021-04-12 15:23:22,450 INFO: Save file to DCGINTL.MAERS.IFTMBF.DCG2101180001.edi
+2021-04-12 15:23:42,581 INFO: Updating data status
+2021-04-12 15:23:55,581 INFO: Finished handle booking id is DCG2101180001, taken time is 49.410676s. 
+

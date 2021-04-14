@@ -57,9 +57,9 @@ def encoding_edi_file(data, connect_db):
     :return:
     """
     content_list = []
-    if data["env_id"] == EVENGREEN:
+    if data["edi_id"] == EVENGREEN_FTP['edi_id']:
         content_list = encoding_EVENGREEN(data, connect_db)
-    if data["env_id"] == MAERSK:
+    if data["edi_id"] == MAERSK_FTP['edi_id']:
         content_list = encoding_MAERSK(data, connect_db)
     return content_list
 
@@ -78,8 +78,8 @@ def encoding_EVENGREEN(data, connect_db):
     op_time = datetime.datetime.now().strftime("%H%M")
 
     head_string = ""
-    if data["env_id"] == EVENGREEN:
-        head_string = DCG_EVENGREEN_EDI_ID + ":AA+EVERGREEN:ZZ"
+    if data["edi_id"] == MAERSK_FTP['edi_id']:
+        head_string = EVENGREEN_FTP['edi_id'] + ":AA+EVERGREEN:ZZ"
     content_list.append("UNB+UNOA:3+" + head_string + op_date + ":" + op_time + "+" + data["booking_id"])
 
     # UNH+DCG2001+IFTMBF:D:99B:UN:2.0'
@@ -244,8 +244,7 @@ def encoding_MAERSK(data, connect_db):
     op_date = datetime.datetime.now().strftime("%y%m%d")
     op_time = datetime.datetime.now().strftime("%H%M")
 
-    head_string = ""
-    head_string = DCG_MAERSK_EDI_ID + ":ZZZ+" + MAERSK
+    head_string = MAERSK_FTP['send_company'] + ":ZZZ+" + MAERSK_FTP['edi_id']
 
     # UNB+UNOA:1+DCGINTL:ZZZ+MAEU:ZZZ+210126:1539+DCG210131341'
     content_list.append("UNB+UNOA:1+" + head_string + "+" + op_date + ":" + op_time + "+" + data["booking_id"])
@@ -309,10 +308,10 @@ def encoding_MAERSK(data, connect_db):
     content_list.append("NAD+CA+MCPU:160:86++MCC TRANSPORT")
 
     # NAD+FC+40900315720:160:87++DCG INTL'
-    content_list.append("NAD+FC+40900315720:160:87++DCG INTL")
+    content_list.append("NAD+FC+" + MAERSK_FTP["customer_code"] + ":160:87++DCG INTL")
 
     # NAD+BA+40900315720:160:87++DCG INTL'
-    content_list.append("NAD+BA+40900315720:160:87++DCG INTL")
+    content_list.append("NAD+BA+" + MAERSK_FTP["customer_code"] + ":160:87++DCG INTL")
 
     # CTA+IC+:THOMAS'
     content_list.append("CTA+IC+:" + data["contact"])

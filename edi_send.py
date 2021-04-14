@@ -13,9 +13,6 @@
 import shutil
 from datetime import datetime
 import time
-from db_utils import *
-from sql_const import BOOKING_SQL
-from const import *
 from ftp_tools import create_ftp_connect, uploading_file, get_file_list
 from encode_file import *
 
@@ -46,7 +43,7 @@ def get_booking_data(current_row):
         'town': current_row[21].strip(),
         'country': current_row[22],
         'postcode': current_row[23].strip(),
-        'env_id': current_row[24].strip(),
+        'edi_id': current_row[24].strip(),
     }
     return booking_data
 
@@ -95,45 +92,45 @@ def check_data(booking_data, all_detail_row):
         detail_data = get_booking_detail_data(detail_row)
         if detail_data['weight'] <= 0:  # 重量必须大于零
             error_msg = "weight can't not less than zero"
-            return error_msg
-
+        else:
+            if detail_data['weight'] > 99:
+                error_msg = "weight can't not more than 99KG."
     return error_msg
 
 
-def get_edi_filename(company_id, booking_id):
+def get_edi_filename(edi_id, booking_id):
     """
     根据不同公司的要求，产生不同的文件名
-    :param company_id: 公司的id
+    :param edi_id: 公司的edi_id
     :param booking_id: booking_id 订单号码
     :return: 文件名
     """
     filename = ""
-    if company_id == EVENGREEN:
-        filename = DCG_EVENGREEN_EDI_ID + booking_id + ".txt"
+    if edi_id == EVENGREEN_FTP['edi_id']:
+        filename = EVENGREEN_FTP['send_company'] + booking_id + ".txt"
 
-    if company_id == MAERSK:
+    if edi_id == MAERSK_FTP['edi_id']:
         # < senderID >.< receiverID >.< message type >.< control  # >.<message #>.edi
-        MAERSK_NAME = MAERSK[0:MAERSK.find(":")]
-        filename = DCG_MAERSK_EDI_ID + "." + MAERSK_NAME + ".IFTMBF." + booking_id + ".edi"
+        MAERSK_NAME = MAERSK_FTP['company'][0:MAERSK_FTP['company'].find(":")]
+        filename = MAERSK_FTP['send_company'] + "." + MAERSK_NAME + ".IFTMBF." + booking_id + ".edi"
 
     return filename
 
 
 def ftp_upload_file(ftp_files_list):
     start_time = time.time()
-    ftp_username = ""
-    ftp_password = ""
     for file_name in ftp_files_list:
-        if file_name.startswith(DCG_EVENGREEN_EDI_ID):
-            ftp_username = EVENGREEN_FTP_USERNAME
-            ftp_password = EVENGREEN_FTP_PASSWORD
-        if file_name.startswith(DCG_MAERSK_EDI_ID):
-            ftp_username = MAERSK_FTP_USERNAME
-            ftp_password = MAERSK_FTP_PASSWORD
+        is_EVENGREEN = EVENGREEN_FTP['send_company']
 
-        ftp = create_ftp_connect(FTP_HOST, FTP_PORT, ftp_username, ftp_password)
+        if file_name.startswith(is_EVENGREEN):
+            ftp_server = EVENGREEN_FTP
+        else:  # is_MAERSK = MAERSK_FTP['send_company']
+            # file_name.startswith(is_MAERSK):
+            ftp_server = MAERSK_FTP
+
+        ftp = create_ftp_connect(ftp_server['host'], ftp_server['port'], ftp_server['username'], ftp_server['password'])
         if ftp:
-            ftp.cwd(REMOTE_FPT_PATH)  # 转换至需要上传的目录
+            ftp.cwd(ftp_server['in_directory'])  # 转换至需要上传的目录
             if PROGRAM_DEBUG:
                 spend_time = time.time() - start_time
                 print(" ** Step5: 连接远程的FTP服务器 " + "{:3.6f}".format(spend_time) + "s. ")
@@ -179,6 +176,7 @@ def make_edi_file(connect_db, booking_data, all_booking_detail_row):
     :param all_booking_detail_row: booking_detail 的数据
     :return:
     """
+    # 检查数据的合法性
     check_result = check_data(booking_data, all_booking_detail_row)
     if len(check_result) <= 0:
         start_time = time.time()
@@ -198,19 +196,27 @@ def make_edi_file(connect_db, booking_data, all_booking_detail_row):
         # 保存文件
         start_time = time.time()
         # 根据不同承运公司，定义不同的文件名
-        filename = get_edi_filename(booking_data["env_id"], booking_data["booking_id"])
+        filename = get_edi_filename(booking_data["edi_id"], booking_data["booking_id"])
+        if filename:
+            save_to_file(filename, content_list)
+            # 更新数据库
+            status = 1
+        else:
+            # 更新数据库
+            spend_time = time.time() - start_time
+            print(" ** Step3: Error..............生成新的报文文件名不能为空 ")
+            check_result = "filename can be empty."
+            status = 2   # 文件名错误
 
-        save_to_file(filename, content_list)
         logging.info("Save file to " + filename)
         if PROGRAM_DEBUG:
             spend_time = time.time() - start_time
             print(" ** Step3: 生成新的报文文件 " + "{:3.6f}".format(spend_time) + "s. ")
 
-        # 更新数据库
-        status = 1
     else:
+        print(" ** Step1: 检查出数据有错误！" + check_result)
         # 更新数据库
-        status = 2
+        status = 2  # 数据有错误， 状态更新为2
     str_error = check_result
 
     start_time = time.time()
@@ -219,7 +225,7 @@ def make_edi_file(connect_db, booking_data, all_booking_detail_row):
     logging.info("Updating data status")
     if PROGRAM_DEBUG:
         spend_time = time.time() - start_time
-        print(" ** Step4: 更新数据 " + "{:3.6f}".format(spend_time) + "s. ")
+        print(" ** Step4: 更新数据状态 " + "{:3.6f}".format(spend_time) + "s. ")
 
     return
 
@@ -297,8 +303,9 @@ if __name__ == "__main__":
             local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_UPLOAD_DIR)
             files_list = get_file_list(local_path, files_list)
             if files_list:
+                print("have some file upload to FTP ...\n")
                 # 上传到FTP服务器
-                # ftp_upload_file(files_list)
+                ftp_upload_file(files_list)
                 pass
 
             print("EDI SEND System Sleeping ...\n")

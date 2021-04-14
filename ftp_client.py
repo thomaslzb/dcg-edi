@@ -72,7 +72,7 @@ class PyFTPclient:
         ftp.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 75)
         ftp.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
-        # ftp.cwd(dst_path)  # 转换至需要的FTP目标目录
+        ftp.cwd(dst_path)  # 转换至需要的FTP目标目录
 
     def isHaveFtpPath(self, ftp, dst_ftp_path=None):
         if dst_ftp_path is None:
@@ -85,19 +85,19 @@ class PyFTPclient:
         except ftplib.error_perm:
             return False
 
-    def DownloadFile(self, dst_filename, local_filename=None, dst_path=None):
+    def DownloadFile(self, destination_filename, local_filename=None, dst_path=None):
         """
         下载文件函数
-        :param dst_filename: 目标文件名
+        :param destination_filename: 目标文件名
         :param local_filename: 本地文件名
         :param dst_path: 目标目录
         :return: 1 = Success None = Failure
         """
-        local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
+        this_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
         if local_filename is None:
-            local_filename = dst_filename
+            local_filename = destination_filename
 
-        local_filename = os.path.join(local_path, local_filename)
+        local_filename = os.path.join(this_local_path, local_filename)
 
         if dst_path is None:
             dst_path = ""
@@ -121,7 +121,7 @@ class PyFTPclient:
 
             self.connect(ftp, dst_path)
             ftp.voidcmd('TYPE I')
-            dst_file_size = ftp.size(dst_filename)
+            dst_file_size = ftp.size(destination_filename)
 
             mon = monitor()   # begin monitor
             while dst_file_size > f.tell():
@@ -129,8 +129,8 @@ class PyFTPclient:
                     self.connect(ftp, dst_path)
                     self.waiting = False
                     # retrieve file from position where we were disconnected
-                    res = ftp.retrbinary('RETR %s' % dst_filename, f.write) if f.tell() == 0 else \
-                        ftp.retrbinary('RETR %s' % dst_filename, f.write, rest=f.tell())
+                    res = ftp.retrbinary('RETR %s' % destination_filename, f.write) if f.tell() == 0 else \
+                        ftp.retrbinary('RETR %s' % destination_filename, f.write, rest=f.tell())
 
                 except:
                     self.max_attempts -= 1
@@ -149,7 +149,7 @@ class PyFTPclient:
 
             try:
                 if not res.startswith('226 Transfer complete'):
-                    logging.error('Downloaded file {0} is not full.'.format(dst_filename))
+                    logging.error('Downloaded file {0} is not full.'.format(destination_filename))
                     # os.remove(local_filename)
                     return None
             except:
@@ -161,37 +161,39 @@ class PyFTPclient:
 if __name__ == "__main__":
     logging.basicConfig(filename=LGG_FTP_CLIENT, format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG)
-    print("System restart ....")
     logging.info("============================ FTP Client System restart ============================\n")
-    switch_company = 1
+    switch_company = 2
     while True:
         ftp_connect = ftplib.FTP()
         ftp_connect.set_debuglevel(2)
         ftp_connect.set_pasv(True)
         if switch_company == 1:
             switch_company = 2
-            username = EVENGREEN_FTP_USERNAME
-            password = EVENGREEN_FTP_PASSWORD
+            ftp_server = EVENGREEN_FTP
         else:
             switch_company = 1
-            username = MAERSK_FTP_USERNAME
-            password = MAERSK_FTP_PASSWORD
+            ftp_server = MAERSK_FTP
 
-        obj = PyFTPclient(FTP_HOST, port=FTP_PORT, login=username, passwd=password)
-        obj.connect(ftp_connect, REMOTE_FPT_PATH)
+        obj = PyFTPclient(ftp_server["host"],
+                          port=ftp_server["port"],
+                          login=ftp_server["username"],
+                          passwd=ftp_server["password"])
+        logging.info("Login FTP Server " + ftp_server['out_directory'] + "\n")
+        obj.connect(ftp_connect, ftp_server['out_directory'])
         all_files_name = ftp_connect.nlst()  # 获取远程FTP的所有文件名
         try:
             for file_name in all_files_name:
                 # 如果是本公司的上传的文件，则不必要去下载
-                if not file_name.startswith(DCG_EVENGREEN_EDI_ID) or not file_name.startswith(DCG_MAERSK_EDI_ID):
+                if not file_name.startswith(ftp_server["send_company"]):
+                    print("begin downloading filename is ...."+file_name)
                     start_time = time.time()
                     logging.info("Downloading file:" + file_name)
-                    if obj.DownloadFile(file_name, None, REMOTE_FPT_PATH):
+                    if obj.DownloadFile(file_name, None, ftp_server['out_directory']):
                         info_status = "Success"
                         # 将本地文件名更名
                         local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
                         source_filename = os.path.join(local_path, file_name)   # 源文件名
-                        dst_filename = os.path.join(local_path, FILE_HEADER+file_name)  # 更改后的目标文件名
+                        dst_filename = os.path.join(local_path, FILE_HEADER + file_name)  # 更改后的目标文件名
                         os.rename(source_filename, dst_filename)
                         # 下载成功后，删除远程的文件
                         ftp_connect.delete(file_name)  # 删除远程FTP文件
@@ -199,12 +201,13 @@ if __name__ == "__main__":
                         info_status = "Failure"
 
                     spend_time = time.time() - start_time
-                    logging.info(info_status + " download file: " + file_name +
-                                 "... {:3.6f}".format(spend_time) + "s. \n")
+                    logging.info(info_status + " download file: " + file_name
+                                 + "... {:3.6f}".format(spend_time) + "s. \n")
 
             ftp_connect.close()
-            time.sleep(FTP_CLIENT_SLEEP_TIME)
+            time.sleep(FTP_CLIENT_SLEEP_TIME)   # 休眠一段时间后再次查询
         except:
+            print("some error happen................")
             logging.info("ERROR: __main__")
             time.sleep(600)
 
