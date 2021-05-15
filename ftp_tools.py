@@ -50,14 +50,16 @@ import shutil
 from const import *
 
 
-def create_ftp_connect(host, port, username, password):
+def create_ftp_connect(host, port, username, password, is_EPSV=True):
     """
     建立FTP连接
+    :param is_EPSV: 判断是否转成 EPSV 模式， MSK 公司的不需要转换成该模式
     :param host:
     :param port:
     :param username:
     :param password:
     :return: FTP 连接
+
     """
     ftp_connect = ftplib.FTP()
     # ftp.set_debuglevel(2)         #打开调试级别2，显示详细信息
@@ -65,7 +67,8 @@ def create_ftp_connect(host, port, username, password):
     try:
         ftp_connect.connect(host, port)  # 连接
         ftp_connect.login(username, password)  # 登录，如果匿名登录则用空串代替即可
-        ftp_connect.af = socket.AF_INET6  # IMPORTANT: force ftplib to use EPSV by setting
+        if is_EPSV:
+            ftp_connect.af = socket.AF_INET6  # IMPORTANT: force ftplib to use EPSV by setting
         print(ftp_connect.getwelcome())  # 打印欢迎信息
     except(socket.error, socket.gaierror):  # ftp 连接错误
         logging.exception("ERROR!")

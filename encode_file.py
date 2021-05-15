@@ -261,11 +261,13 @@ def encoding_MAERSK(data, connect_db):
     # TSR+30+2' ---- Transport Service Requirements
     content_list.append("TSR+" + data["transport_service_mode"] + "+2")
 
-    # RFF+SI:DCG2020112301'
-    content_list.append("RFF+ZZ1:" + data["booking_id"])
+    # RFF+AGE:DCG2020112301'
+    # For the DCG reference number which need to send back to your side in booking confirmation,
+    # please use RFF+AGE segment
+    content_list.append("RFF+AGE:" + data["booking_id"])
 
     # RFF+CT:CND005244'
-    content_list.append("RFF+CT:" + data["telephone"])
+    # content_list.append("RFF+CT:" + data["telephone"])
 
     # TDT+20++1++MCC TRANSPORT:172'
     content_list.append("TDT+20++1++MCC TRANSPORT:172")

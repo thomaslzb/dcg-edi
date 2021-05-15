@@ -44,7 +44,9 @@ def setInterval(interval, times=-1):
             t.daemon = True
             t.start()
             return stop
+
         return wrap
+
     return outer_wrap
 
 
@@ -59,14 +61,17 @@ class PyFTPclient:
         self.max_attempts = 15
         self.waiting = True
 
-    def connect(self, ftp, dst_path=None):
+    def connect(self, ftp, dst_path=None, is_EPSV=True):
         if dst_path is None:
             dst_path = ""
 
         ftp.connect(self.host, self.port)
         ftp.login(self.login, self.passwd)
         #  ======================== VERY IMPORTANT ===========================
-        ftp.af = socket.AF_INET6  # 这个设置非常重要: force ftplib to use EPSV by setting
+        if is_EPSV:
+            # MSK 的生产环境下，不用这个模式
+            ftp.af = socket.AF_INET6  # 这个设置非常重要: force ftplib to use EPSV by setting,
+
         #  ======================== VERY IMPORTANT ===========================
         # optimize socket params for download task
         ftp.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -110,7 +115,8 @@ class PyFTPclient:
                 if not self.waiting:
                     i = f.tell()
                     if self.ptr < i:
-                        logging.info("File size is %d  - speed is %0.1f Kb/s" % (i, (i-self.ptr)/(1024*self.monitor_interval)))
+                        logging.info("File size is %d  - speed is %0.1f Kb/s" % (
+                        i, (i - self.ptr) / (1024 * self.monitor_interval)))
                         self.ptr = i
                     else:
                         ftp.close()
@@ -123,7 +129,7 @@ class PyFTPclient:
             ftp.voidcmd('TYPE I')
             dst_file_size = ftp.size(destination_filename)
 
-            mon = monitor()   # begin monitor
+            mon = monitor()  # begin monitor
             while dst_file_size > f.tell():
                 try:
                     self.connect(ftp, dst_path)
@@ -179,20 +185,24 @@ if __name__ == "__main__":
                           login=ftp_server["username"],
                           passwd=ftp_server["password"])
         logging.info("Login FTP Server " + ftp_server['out_directory'] + "\n")
-        obj.connect(ftp_connect, ftp_server['out_directory'])
+        if ftp_server["host"] == '193.163.248.25':     # MSK 是生产模式, 不能使用 EPSV 模式
+            obj.connect(ftp_connect, ftp_server['out_directory'], False)
+        else:
+            obj.connect(ftp_connect, ftp_server['out_directory'])
         all_files_name = ftp_connect.nlst()  # 获取远程FTP的所有文件名
+        print(all_files_name)
         try:
             for file_name in all_files_name:
                 # 如果是本公司的上传的文件，则不必要去下载
                 if not file_name.startswith(ftp_server["send_company"]):
-                    print("begin downloading filename is ...."+file_name)
+                    print("begin downloading filename is ...." + file_name)
                     start_time = time.time()
                     logging.info("Downloading file:" + file_name)
                     if obj.DownloadFile(file_name, None, ftp_server['out_directory']):
                         info_status = "Success"
                         # 将本地文件名更名
                         local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), LOCAL_DOWNLOAD_PATH)
-                        source_filename = os.path.join(local_path, file_name)   # 源文件名
+                        source_filename = os.path.join(local_path, file_name)  # 源文件名
                         dst_filename = os.path.join(local_path, FILE_HEADER + file_name)  # 更改后的目标文件名
                         os.rename(source_filename, dst_filename)
                         # 下载成功后，删除远程的文件
@@ -205,11 +215,8 @@ if __name__ == "__main__":
                                  + "... {:3.6f}".format(spend_time) + "s. \n")
 
             ftp_connect.close()
-            time.sleep(FTP_CLIENT_SLEEP_TIME)   # 休眠一段时间后再次查询
+            time.sleep(FTP_CLIENT_SLEEP_TIME)  # 休眠一段时间后再次查询
         except:
             print("some error happen................")
             logging.info("ERROR: __main__")
             time.sleep(600)
-
-
-

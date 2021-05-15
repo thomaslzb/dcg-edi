@@ -14,7 +14,7 @@ import pyodbc
 from const import *
 
 
-# 连接数据库
+# 连接远程的 MS SQL SERVER 数据库
 def connect_remote_db():
     connect = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + IP_DATABASE
                              + ';DATABASE=' + REMOTE_DATABASE_NAME

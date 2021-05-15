@@ -103,3 +103,4 @@ PermissionError: [WinError 5] Access is denied: 'C:\\DCG\\GitHub\\dcg-edi\\sendf
 2021-04-12 15:23:42,581 INFO: Updating data status
 2021-04-12 15:23:55,581 INFO: Finished handle booking id is DCG2101180001, taken time is 49.410676s. 
 
+2021-04-17 10:34:47,353 INFO: ========================= EDI Send Monitor System restart ========================

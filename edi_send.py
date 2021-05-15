@@ -124,11 +124,18 @@ def ftp_upload_file(ftp_files_list):
 
         if file_name.startswith(is_EVENGREEN):
             ftp_server = EVENGREEN_FTP
+            is_EPSV = True
         else:  # is_MAERSK = MAERSK_FTP['send_company']
             # file_name.startswith(is_MAERSK):
             ftp_server = MAERSK_FTP
+            is_EPSV = False
 
-        ftp = create_ftp_connect(ftp_server['host'], ftp_server['port'], ftp_server['username'], ftp_server['password'])
+        ftp = create_ftp_connect(ftp_server['host'],
+                                 ftp_server['port'],
+                                 ftp_server['username'],
+                                 ftp_server['password'],
+                                 is_EPSV,
+                                 )
         if ftp:
             ftp.cwd(ftp_server['in_directory'])  # 转换至需要上传的目录
             if PROGRAM_DEBUG:
